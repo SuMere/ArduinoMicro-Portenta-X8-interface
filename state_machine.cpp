@@ -1,5 +1,34 @@
 #include "state_machine.h"
 
+String fromErrorToString(TesterError error) {
+    switch (error)
+    {
+    case NO_ERROR:
+        return "NO_ERROR";
+        break;
+    case ERROR_INIT_FAILED:
+        return "ERROR_INIT_FAILED";
+        break;
+    case ERROR_TIMEOUT:
+        return "ERROR_TIMEOUT";
+        break;
+    case ERROR_INVALID_STATE:
+        return "ERROR_INVALID_STATE";
+        break;
+    case ERROR_INVALID_COMMAND:
+        return "ERROR_INVALID_COMMAND";
+        break;
+    case ERROR_INVALID_ARGUMENT:
+        return "ERROR_INVALID_ARGUMENT";
+        break;
+    case ERROR_INVALID_RESPONSE:
+        return "ERROR_INVALID_RESPONSE";
+        break;
+    default:
+        return "ERROR_UNKNOWN";
+        break;
+    }
+}
 
 String fromModeToString(TesterMode mode) {
     switch (mode)
@@ -284,34 +313,7 @@ void StateMachine::handleStateError() {
     String message = "[!]- ERROR: ";
 
     Serial.println(message);
-
-    switch (this->currentError)
-    {
-    case ERROR_INIT_FAILED:
-        Serial.println("Error init failed");
-        break;
-    case ERROR_TIMEOUT:
-        Serial.println("Error timeout");
-        break;
-    case ERROR_INVALID_STATE:
-        Serial.println("Error invalid state");
-        break;
-    case ERROR_INVALID_COMMAND:
-        Serial.println("Error invalid command");
-        break;
-    case ERROR_INVALID_ARGUMENT:
-        Serial.println("Error invalid argument");
-        break;
-    case ERROR_INVALID_RESPONSE:
-        Serial.println("Error invalid response");
-        break;
-    case NO_ERROR:
-        Serial.println("No error");
-        this->setState(STATE_IDLE);
-        break;
-    default:
-        break;
-    }
+    Serial.println(fromErrorToString(this->currentError));
 
     Serial.println("@@@@ Waiting for reset... @@@@");
     while(1);
