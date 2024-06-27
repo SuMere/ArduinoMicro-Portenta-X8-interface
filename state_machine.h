@@ -10,6 +10,8 @@ typedef enum {
     STATE_LOGGED_IN,
     STATE_SUDO,
     STATE_IDLE,
+    STATE_WAIT_FOR_MODE,
+    STATE_MODE,
     STATE_ERROR
 } TesterState;
 
@@ -20,7 +22,6 @@ class StateMachine {
         ~StateMachine();
         TesterError init();
         TesterError update();
-        void setState(TesterState state);
         TesterState getState();
 
     private:
