@@ -115,9 +115,7 @@ StateMachine::~StateMachine() {
 }
 
 TesterError StateMachine::init() {
-    this -> portentaInterface = PortentaInterface();
     this -> setState(STATE_WAIT_LOGIN);
-
 
     return NO_ERROR;
 }
@@ -176,12 +174,12 @@ void StateMachine::setState(TesterState state) {
 }
 
 void StateMachine::handleStateWaitLogin() {
-    this->currentError = this->portentaInterface.waitForLogin();
-    
+    this->currentError = PTRINT.waitForLogin();
+
     if(this->currentError == NO_ERROR) {
         String ret = "";
         String waitFor = PSW_PROMPT;
-        this->portentaInterface.sendCommand(USR_STRING, &ret, &waitFor, true, true);
+        PTRINT.sendCommand(USR_STRING, &ret, &waitFor, true, true);
 
         if(this->currentError == NO_ERROR) {
             this->setState(STATE_WAIT_PASSWORD);
@@ -197,7 +195,7 @@ void StateMachine::handleStateWaitLogin() {
 void StateMachine::hadleStateWaitPassword() {
     String ret = "";
     String waitFor = IN_SHELL_PROMPT;
-    this->currentError = this->portentaInterface.sendCommand(PSW_STRING, &ret, &waitFor, true, false);
+    this->currentError = PTRINT.sendCommand(PSW_STRING, &ret, &waitFor, true, false);
 
     if(this->currentError == NO_ERROR) {
         this->setState(this->afterPswState);
@@ -211,11 +209,11 @@ void StateMachine::handleStateLoggedIn() {
     String waitFor = PSW_PROMPT;
 
     Serial.println("[<0>] ------------ Reading raw data");
-    Serial.println(this->portentaInterface.rawRead());
+    Serial.println(PTRINT.rawRead());
     Serial.println("[<0>] ------------ End of raw data");
 
     delay(3000);
-    this->currentError = this->portentaInterface.sendCommand("sudo -s", &ret, &waitFor, true);
+    this->currentError = PTRINT.sendCommand("sudo -s", &ret, &waitFor, true);
 
     if(this->currentError == NO_ERROR) {
         this->setState(STATE_WAIT_PASSWORD);
@@ -228,9 +226,11 @@ void StateMachine::handleStateLoggedIn() {
 void StateMachine::handleStateSudo() {
     String waitFor = IN_SHELL_PROMPT;
     String ret;
-    this->currentError = this->portentaInterface.sendCommand("dmesg -n 1", &ret, &waitFor, true, false);
-    
-    this -> portentaInterface.rawRead();
+    this->currentError = PTRINT.sendCommand("dmesg -n 1", &ret, &waitFor, true, false);
+
+    Serial.println(ret);
+
+    PTRINT.rawRead();
     if(this->currentError == NO_ERROR) {
         this->setState(STATE_IDLE);
     } else {
@@ -240,13 +240,13 @@ void StateMachine::handleStateSudo() {
 
 void StateMachine::handleStateIdle() {
     String ret;
-    this->portentaInterface.sendCommand("whoami", &ret, NULL, true, true);
+    String waitFor = "root";
+    PTRINT.sendCommand("whoami", &ret, &waitFor, true, true);
 
     Serial.println("[<0>] ------------ WHOAMI TEST ------------");
     Serial.print("Whoami: ");
     Serial.println(ret);
     Serial.println("[<0>] ------------ END OF WHOAMI TEST ------------");
-    this->portentaInterface.rawRead();
 
     this->setState(STATE_WAIT_FOR_MODE);
 }

@@ -2,6 +2,8 @@
 
 #include "common.h"
 #include "portenta_interface.h"
+#include "gpio_handler.h"
+#include "pwm_handler.h"
 
 typedef enum {
     STATE_INIT,
@@ -42,7 +44,6 @@ class StateMachine {
         TesterMode mode;
         TesterError currentError;
 
-        PortentaInterface portentaInterface;
         void setState(TesterState state);
 
         void handleStateWaitLogin();
