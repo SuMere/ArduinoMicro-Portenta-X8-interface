@@ -138,7 +138,7 @@ String PortentaInterface::requestInput(String prompt) {
 void PortentaInterface::readUnusedOutput() {
     //Serial.println("FLUSHING");
     while(Serial1.available()) {
-        Serial.println(Serial1.read());
+        Serial.println(Serial1.readString());
     }
 }
 
