@@ -1,5 +1,42 @@
 #include "state_machine.h"
 
+
+String fromModeToString(TesterMode mode) {
+    switch (mode)
+    {
+    case MODE_NONE:
+        return "MODE_NONE";
+        break;
+    case MODE_GPIO:
+        return "MODE_GPIO";
+        break;
+    case MODE_PWM:
+        return "MODE_PWM";
+        break;
+    case MODE_ADC:
+        return "MODE_ADC";
+        break;
+    case MODE_I2C:
+        return "MODE_I2C";
+        break;
+    case MODE_SPI:
+        return "MODE_SPI";
+        break;
+    case MODE_UART:
+        return "MODE_UART";
+        break;
+    case MODE_I2S:
+        return "MODE_I2S";
+        break;
+    case MODE_INTERACTIVE:
+        return "MODE_INTERACTIVE";
+        break;
+    default:
+        return "MODE_UNKNOWN";
+        break;
+    }
+}
+
 String fromStateToString(TesterState state) {
     switch (state)
     {
@@ -181,8 +218,66 @@ void StateMachine::handleStateIdle() {
     Serial.println(ret);
     Serial.println("[<0>] ------------ END OF WHOAMI TEST ------------");
     this->portentaInterface.rawRead();
-    this->currentError = ERROR_INVALID_RESPONSE;
-    this->setState(STATE_ERROR);
+
+    this->setState(STATE_WAIT_FOR_MODE);
+}
+
+void StateMachine::handleStateWaitForMode() {
+    Serial.println("Select Mode:");
+    Serial.println("0: None");
+    Serial.println("1: GPIO");
+    Serial.println("2: PWM (DISABLED ATM)");
+    Serial.println("3: ADC (DISABLED ATM)");
+    Serial.println("4: I2C (DISABLED ATM)");
+    Serial.println("5: SPI (DISABLED ATM)");
+    Serial.println("6: UART (DISABLED ATM)");
+    Serial.println("7: I2S (DISABLED ATM)");
+    Serial.println("8: Interactive");
+
+    while (!Serial.available()) {
+        delay(100);
+    }
+
+    this->mode = TesterMode(Serial.readString().toInt());
+
+    this->setState(STATE_MODE);
+}
+
+void StateMachine::handleStateMode() {
+    switch (this->mode)
+    {
+    case MODE_NONE:
+        this->setState(STATE_WAIT_FOR_MODE);
+        break;
+    case MODE_GPIO:
+        this->currentError = this->gpioMode();
+        break;
+    case MODE_PWM:
+        this->currentError = this->pwmMode();
+        break;
+    case MODE_ADC:
+        this->currentError = this->adcMode();
+        break;
+    case MODE_I2C:
+        this->currentError = this->i2cMode();
+        break;
+    case MODE_SPI:
+        this->currentError = this->spiMode();
+        break;
+    case MODE_UART:
+        this->currentError = this->uartMode();
+        break;
+    case MODE_I2S:
+        this->currentError = this->i2sMode();
+        break;
+    case MODE_INTERACTIVE:
+        this->interactiveMode();
+        break;
+    default:
+        Serial.println("Unidentified mode");
+        this->setState(STATE_WAIT_FOR_MODE);
+        break;
+    }
 }
 
 void StateMachine::handleStateError() {
@@ -222,15 +317,65 @@ void StateMachine::handleStateError() {
     while(1);
 }
 
+TesterError StateMachine::gpioMode() {
+    TesterError opStatus = NO_ERROR;
+    String portentaGpio = "";
+    int gigaGpio = 0;
 
+    Serial.println("[@] - GPIO MODE");
 
     
-
-
+    portentaGpio = PTRINT.requestInput("Insert Portenta GPIO number: ");
+   // portentaGpio = "@exit";
+    if(portentaGpio.indexOf("@exit") >= 0) {
+        this->setState(STATE_WAIT_FOR_MODE);
+    } else {
+        gigaGpio = PTRINT.requestInput("Insert Giga GPIO number: ").toInt();
+        GpioHandler gpioHandler = GpioHandler();
+        opStatus = gpioHandler.initTests();
+        if(opStatus == NO_ERROR) {
+            opStatus = gpioHandler.testGpio(portentaGpio, gigaGpio, true);
+        }
+    }
+    
+    if(opStatus != NO_ERROR) {
+        this->setState(STATE_ERROR);
+    }
+    return opStatus;
 }
 
+TesterError StateMachine::pwmMode() {
+    Serial.println("[@] - PWM MODE");
+    this->setState(STATE_WAIT_FOR_MODE);
 }
 
+TesterError StateMachine::adcMode() {
+    Serial.println("[@] - ADC MODE");
+    this->setState(STATE_WAIT_FOR_MODE);
 }
 
+TesterError StateMachine::i2cMode() {
+    Serial.println("[@] - I2C MODE");
+    this->setState(STATE_WAIT_FOR_MODE);
+}
+
+TesterError StateMachine::spiMode() {
+    Serial.println("[@] - SPI MODE");
+    this->setState(STATE_WAIT_FOR_MODE);
+}
+
+TesterError StateMachine::uartMode() {
+    Serial.println("[@] - UART MODE");
+    this->setState(STATE_WAIT_FOR_MODE);
+}
+
+TesterError StateMachine::i2sMode() {
+    Serial.println("[@] - I2S MODE");
+    this->setState(STATE_WAIT_FOR_MODE);
+}
+
+TesterError StateMachine::interactiveMode() {
+    Serial.println("[@] - INTERACTIVE MODE");
+    PTRINT.interactiveMode();
+    this->setState(STATE_WAIT_FOR_MODE);
 }

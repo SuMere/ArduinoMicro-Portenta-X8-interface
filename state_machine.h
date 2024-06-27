@@ -15,6 +15,18 @@ typedef enum {
     STATE_ERROR
 } TesterState;
 
+typedef enum {
+    MODE_NONE,
+    MODE_GPIO,
+    MODE_PWM,
+    MODE_ADC,
+    MODE_I2C,
+    MODE_SPI,
+    MODE_UART,
+    MODE_I2S,
+    MODE_INTERACTIVE
+}TesterMode;
+
 class StateMachine {
     public:
         StateMachine();
@@ -27,7 +39,7 @@ class StateMachine {
     private:
         TesterState state;
         TesterState afterPswState;
-        
+        TesterMode mode;
         TesterError currentError;
 
         PortentaInterface portentaInterface;
@@ -38,5 +50,16 @@ class StateMachine {
         void handleStateLoggedIn();
         void handleStateSudo();
         void handleStateIdle();
+        void handleStateWaitForMode();
+        void handleStateMode();
         void handleStateError();
+
+        TesterError gpioMode();
+        TesterError pwmMode();
+        TesterError adcMode();
+        TesterError i2cMode();
+        TesterError spiMode();
+        TesterError uartMode();
+        TesterError i2sMode();
+        TesterError interactiveMode();
 };
