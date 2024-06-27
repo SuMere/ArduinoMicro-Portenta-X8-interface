@@ -178,6 +178,7 @@ void GpioHandler::portentaInputTestRoutine(String portentaGpio, int gigaGpio) {
 
     pinMode(gigaGpio, OUTPUT);
     digitalWrite(gigaGpio, LOW);
+    delay(200);
 
     this->readPortentaGpio(portentaGpio, &portentaGpioStatus);
     Serial.println("[D] ----------------------------------------------------");
@@ -185,9 +186,9 @@ void GpioHandler::portentaInputTestRoutine(String portentaGpio, int gigaGpio) {
     Serial.println("[D] ----------------------------------------------------");
 
     if(portentaGpioStatus == gigaGpioStatus){
-        this->toggleGigaGpio(gigaGpio);
         gigaGpioStatus = (gigaGpioStatus+1)%2;
-        
+        digitalWrite(gigaGpio, HIGH);
+
         delay(200);
         this->readPortentaGpio(portentaGpio, &portentaGpioStatus);
         Serial.println("[D] ----------------------------------------------------");
