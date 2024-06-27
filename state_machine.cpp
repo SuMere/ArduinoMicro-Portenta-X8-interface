@@ -1,5 +1,40 @@
 #include "state_machine.h"
 
+String fromStateToString(TesterState state) {
+    switch (state)
+    {
+    case STATE_INIT:
+        return "STATE_INIT";
+        break;
+    case STATE_WAIT_LOGIN:
+        return "STATE_WAIT_LOGIN";
+        break;
+    case STATE_WAIT_PASSWORD:
+        return "STATE_WAIT_PASSWORD";
+        break;
+    case STATE_LOGGED_IN:
+        return "STATE_LOGGED_IN";
+        break;
+    case STATE_SUDO:
+        return "STATE_SUDO";
+        break;
+    case STATE_IDLE:
+        return "STATE_IDLE";
+        break;
+    case STATE_WAIT_FOR_MODE:
+        return "STATE_WAIT_FOR_MODE";
+        break;
+    case STATE_MODE:
+        return "STATE_MODE";
+        break;
+    case STATE_ERROR:
+        return "STATE_ERROR";
+        break;
+    default:
+        return "STATE_UNKNOWN";
+        break;
+    }
+}
 
 StateMachine::StateMachine() {
     this -> state = STATE_INIT;
@@ -21,6 +56,59 @@ TesterError StateMachine::init() {
     return NO_ERROR;
 }
 
+TesterError StateMachine::update() {
+    switch(state) {
+        case STATE_INIT:
+            this->init();
+            break;
+
+        case STATE_WAIT_LOGIN:
+            this->handleStateWaitLogin();
+            break;
+
+        case STATE_WAIT_PASSWORD:
+            this->hadleStateWaitPassword();
+            break;
+
+        case STATE_LOGGED_IN:
+            this->handleStateLoggedIn();
+            break;
+
+        case STATE_SUDO:
+            this->handleStateSudo();
+            break;
+
+        case STATE_IDLE:
+            this->handleStateIdle();
+            break;
+
+        case STATE_WAIT_FOR_MODE:
+            this->handleStateWaitForMode();
+            break;
+
+        case STATE_MODE:
+            this->handleStateMode();
+            break;
+
+        case STATE_ERROR:
+            this->handleStateError();
+            break;
+    }
+}
+
+TesterState StateMachine::getState() {
+    return state;
+}
+
+void StateMachine::setState(TesterState state) {
+    Serial.println("[>]-----------------------------------------------------------------------------------[>]");
+    Serial.println("[>]- STATE CHANGE: "+
+                   fromStateToString(this->state)+
+                   " -> "+fromStateToString(state));
+    Serial.println("[>]-----------------------------------------------------------------------------------[>]");
+    this->state = state;
+}
+
 void StateMachine::handleStateWaitLogin() {
     this->currentError = this->portentaInterface.waitForLogin();
     
@@ -32,10 +120,10 @@ void StateMachine::handleStateWaitLogin() {
         if(this->currentError == NO_ERROR) {
             this->setState(STATE_WAIT_PASSWORD);
             this->afterPswState = STATE_LOGGED_IN;
-        }else{
+        } else {
             this->setState(STATE_ERROR);
         }
-    }else{
+    } else {
         this->setState(STATE_ERROR);
     }
 }
@@ -47,7 +135,7 @@ void StateMachine::hadleStateWaitPassword() {
 
     if(this->currentError == NO_ERROR) {
         this->setState(this->afterPswState);
-    }else{
+    } else {
         this->setState(STATE_ERROR);
     }
 }
@@ -66,7 +154,7 @@ void StateMachine::handleStateLoggedIn() {
     if(this->currentError == NO_ERROR) {
         this->setState(STATE_WAIT_PASSWORD);
         this->afterPswState = STATE_SUDO;
-    }else{
+    } else {
         this->setState(STATE_ERROR);
     }
 }
@@ -79,7 +167,7 @@ void StateMachine::handleStateSudo() {
     this -> portentaInterface.rawRead();
     if(this->currentError == NO_ERROR) {
         this->setState(STATE_IDLE);
-    }else{
+    } else {
         this->setState(STATE_ERROR);
     }
 }
@@ -134,75 +222,15 @@ void StateMachine::handleStateError() {
     while(1);
 }
 
-TesterError StateMachine::update() {
-    switch(state) {
-        case STATE_INIT:
-            this->init();
-            break;
 
-        case STATE_WAIT_LOGIN:
-            this->handleStateWaitLogin();
-            break;
 
-        case STATE_WAIT_PASSWORD:
-            this->hadleStateWaitPassword();
-            break;
+    
 
-        case STATE_LOGGED_IN:
-            this->handleStateLoggedIn();
-            break;
 
-        case STATE_SUDO:
-            this->handleStateSudo();
-            break;
-
-        case STATE_IDLE:
-            this->handleStateIdle();
-            break;
-
-        case STATE_ERROR:
-            this->handleStateError();
-            break;
-    }
 }
 
-String fromStateToString(TesterState state) {
-    switch (state)
-    {
-    case STATE_INIT:
-        return "STATE_INIT";
-        break;
-    case STATE_WAIT_LOGIN:
-        return "STATE_WAIT_LOGIN";
-        break;
-    case STATE_WAIT_PASSWORD:
-        return "STATE_WAIT_PASSWORD";
-        break;
-    case STATE_LOGGED_IN:
-        return "STATE_LOGGED_IN";
-        break;
-    case STATE_SUDO:
-        return "STATE_SUDO";
-        break;
-    case STATE_IDLE:
-        return "STATE_IDLE";
-        break;
-    case STATE_ERROR:
-        return "STATE_ERROR";
-        break;
-    default:
-        return "STATE_UNKNOWN";
-        break;
-    }
 }
 
-void StateMachine::setState(TesterState state) {
-    Serial.println("[*]- STATE CHANGE: "+
-                   fromStateToString(this->state)+
-                   " -> "+fromStateToString(state));
-    this->state = state;
 }
 
-TesterState StateMachine::getState() {
-    return state;
 }

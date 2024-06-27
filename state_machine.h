@@ -30,6 +30,7 @@ class StateMachine {
         TesterError currentError;
 
         PortentaInterface portentaInterface;
+        void setState(TesterState state);
 
         void handleStateWaitLogin();
         void hadleStateWaitPassword();
