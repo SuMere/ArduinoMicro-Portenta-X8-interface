@@ -31,29 +31,15 @@ TesterError GpioHandler::testGpio(String portentaGpio, int gigaGpio, bool testIn
     }
 
     if(this->checkPortentaGpioAvalability(portentaGpio)){
-        opStatus = this->exportPortentaGpio(portentaGpio);
-    }
-
-    if(opStatus == NO_ERROR){
-        if(testInput) {
-            this->portentaInputTestRoutine(portentaGpio, gigaGpio);
-        } else {
-            this->portentaOutputTestRoutine(portentaGpio, gigaGpio);
-        }
-    }
-
-    //opStatus = this->unexportPortentaGpio(portentaGpio);
-
-    return opStatus;
-}
-
-String GpioHandler::getReport() {
-    return this->report;
-}
-
-
         if(opStatus == NO_ERROR){
+            if(testInput) {
+                this->portentaInputTestRoutine(portentaGpio, gigaGpio);
+            } else {
+                this->portentaOutputTestRoutine(portentaGpio, gigaGpio);
+            }
         }
+    }else{
+        opStatus = ERROR_INIT_FAILED;
     }
 
     return opStatus;
@@ -61,25 +47,6 @@ String GpioHandler::getReport() {
 
 }
 
-TesterError GpioHandler::readPortentaGpio(String gpio, int *value) {
-    TesterError opStatus = NO_ERROR;
-    String retStr = "";
-
-    opStatus = this->setPortentaGpioDirection(gpio, false);
-
-    if(opStatus == NO_ERROR)
-        opStatus = PTRINT.sendCommand("cat gpio" + gpio + "/value", &retStr, NULL, true, true);
-
-    Serial.println("[D] ----------------------------------------------------");
-    Serial.println("RET STR" + retStr);
-    Serial.println("[D] ----------------------------------------------------");
-
-    if(opStatus == NO_ERROR)
-        *value = retStr.toInt();
-    else
-        *value = -1;
-
-    return opStatus;
 bool GpioHandler::isInitialized() {
     return this->initialized;
 }
@@ -99,26 +66,34 @@ bool GpioHandler::checkPortentaGpioAvalability(String gpio) {
     return available;
 }
 
-TesterError GpioHandler::exportPortentaGpio(String gpio) {
+TesterError GpioHandler::readPortentaGpio(String gpio, int *value) {
     TesterError opStatus = NO_ERROR;
+    String retStr = "";
 
-    opStatus = PTRINT.sendCommand("echo " + gpio + " > export", NULL);
+    int gpiochip = gpio.toInt() / 32;
+    int gpioLine = gpio.toInt() % 32;
 
-    if(!this->checkPortentaGpioAvalability(gpio)){
-        Serial.println("[D] - GPIO " + gpio + " exported successfully");
-    }else{
-        Serial.println("[D] - GPIO " + gpio + " export failed");
-        opStatus = ERROR_INVALID_RESPONSE;
+    opStatus = PTRINT.sendCommand("gpioget "+String(gpiochip)+" "+String(gpioLine), &retStr, NULL, true, true);
+
+    if(opStatus == NO_ERROR){
+        *value = retStr.toInt();
     }
 
     return opStatus;
 }
 
-TesterError GpioHandler::unexportPortentaGpio(String gpio) {
+TesterError GpioHandler::writePortentaGpio(String gpio, int value) {
     TesterError opStatus = NO_ERROR;
+    String ret = "";
 
-    opStatus = PTRINT.sendCommand("echo " + gpio + " > unexport", NULL);
+    if(value < 0 || value > 1){
+        return ERROR_INVALID_ARGUMENT;
+    }
 
+    int gpiochip = gpio.toInt() / 32;
+    int gpioLine = gpio.toInt() % 32;
+
+    opStatus = PTRINT.sendCommand("gpioset "+String(gpiochip)+" "+String(gpioLine)+"="+String(value), &ret, NULL, true, true);
     return opStatus;
 }
 

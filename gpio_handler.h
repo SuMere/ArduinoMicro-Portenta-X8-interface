@@ -20,8 +20,6 @@ class GpioHandler {
         bool initialized;
 
         bool checkPortentaGpioAvalability(String gpio);
-        TesterError exportPortentaGpio(String gpio);
-        TesterError unexportPortentaGpio(String gpio);
         TesterError setPortentaGpioDirection(String gpio, bool out);
 
         void portentaInputTestRoutine(String portentaGpio, int gigaGpio);
