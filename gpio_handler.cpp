@@ -2,7 +2,7 @@
 
 GpioHandler::GpioHandler() {
     this->report = "";
-    this->isInitialized = false;
+    this->initialized = false;
 }
 
 GpioHandler::~GpioHandler() {
@@ -16,7 +16,6 @@ TesterError GpioHandler::initTests() {
                                                 &expectedRet, true, true);
 
     if(opStatus == NO_ERROR){
-        this->isInitialized = true;
     }else{
         opStatus = ERROR_INIT_FAILED;
     }
@@ -27,7 +26,7 @@ TesterError GpioHandler::initTests() {
 TesterError GpioHandler::testGpio(String portentaGpio, int gigaGpio, bool testInput) {
     TesterError opStatus = NO_ERROR;
 
-    if(!this->isInitialized) {
+    if(!this->initialized) {
         return ERROR_INVALID_STATE;
     }
 
@@ -122,6 +121,8 @@ TesterError GpioHandler::readPortentaGpio(String gpio, int *value) {
         *value = -1;
 
     return opStatus;
+bool GpioHandler::isInitialized() {
+    return this->initialized;
 }
 
 bool GpioHandler::checkPortentaGpioAvalability(String gpio) {
