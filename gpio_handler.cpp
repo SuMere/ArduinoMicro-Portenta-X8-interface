@@ -102,8 +102,13 @@ TesterError GpioHandler::writePortentaGpio(String gpio, int value) {
     return opStatus;
 }
 
+TesterError GpioHandler::startPortentaInterruptCmd(String gpio) {
     TesterError opStatus = NO_ERROR;
+    int gpiochip = gpio.toInt() / 32;
+    int gpioLine = gpio.toInt() % 32;
+    String ret = "";
 
+    opStatus = PTRINT.sendCommand("gpiomon "+String(gpiochip)+" "+String(gpioLine) , &ret, NULL, false, true);
     return opStatus;
 }
 
@@ -130,6 +135,38 @@ void GpioHandler::portentaInputTestRoutine(String portentaGpio, int gigaGpio) {
     }else{
         this->report += "GPIO " + portentaGpio + " input test failed\n";
     }
+
+    // Interrupt test
+    opStatus = this->startPortentaInterruptCmd(portentaGpio);
+    if(opStatus == NO_ERROR){
+        String edgeResult = "";
+        bool edgeDetected = false;
+
+        digitalWrite(gigaGpio, LOW);
+        delay(100);
+        digitalWrite(gigaGpio, HIGH);
+        delay(100);
+        digitalWrite(gigaGpio, LOW);
+        delay(100);
+        digitalWrite(gigaGpio, HIGH);
+        delay(1000); //need this to get the full output
+
+        edgeResult = PTRINT.rawRead();
+        Serial.println("[D]-------------------------------");
+        Serial.println("Edge result: "+edgeResult);
+        Serial.println("[D]-------------------------------");
+        if(edgeResult.indexOf("RISING") != -1){
+            this->report += "GPIO " + portentaGpio + " interrupt rising edge test passed\n";
+        }else{
+            this->report += "GPIO " + portentaGpio + " interrupt rising edge test failed\n";
+        }
+
+        if(edgeResult.indexOf("FALLING") != -1){
+            this->report += "GPIO " + portentaGpio + " interrupt falling edge test passed\n";
+        }else{
+            this->report += "GPIO " + portentaGpio + " interrupt falling edge test failed\n";
+        }
+        opStatus = PTRINT.sendCommand(CTRL_C, &edgeResult, NULL, false, false);
     }
 }
 

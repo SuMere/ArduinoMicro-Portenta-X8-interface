@@ -22,6 +22,7 @@ class GpioHandler {
         TesterError setPortentaGpioDirection(String gpio, bool out);
         TesterError readPortentaGpio(String gpio, int *value);
         TesterError writePortentaGpio(String gpio, int value);
+        TesterError startPortentaInterruptCmd(String gpio);
 
         void portentaInputTestRoutine(String portentaGpio, int gigaGpio);
         void portentaOutputTestRoutine(String portentaGpio, int gigaGpio);
