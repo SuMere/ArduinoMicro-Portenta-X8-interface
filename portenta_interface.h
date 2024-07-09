@@ -2,6 +2,8 @@
 
 #include "common.h"
 
+#define CTRL_C "\x03"
+
 class PortentaInterface {
     public:
         PortentaInterface();

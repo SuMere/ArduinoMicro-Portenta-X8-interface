@@ -7,7 +7,6 @@ TesterError waitForString(String str, time_t time, String *ret) {
     while(current.indexOf(str) < 0 && millis() - time < COMMAND_TIMEOUT) {
         if(Serial1.available()) {
             current = Serial1.readStringUntil('\n');
-            //Serial.println(current);
         }
     }
 
