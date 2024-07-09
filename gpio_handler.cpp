@@ -16,6 +16,7 @@ TesterError GpioHandler::initTests() {
                                                 &expectedRet, true, true);
 
     if(opStatus == NO_ERROR){
+        this->initialized = true;
     }else{
         opStatus = ERROR_INIT_FAILED;
     }
@@ -45,6 +46,10 @@ TesterError GpioHandler::testGpio(String portentaGpio, int gigaGpio, bool testIn
     return opStatus;
 }
 
+String GpioHandler::getReport() {
+    String ret = this->report;
+    this->report = "";
+    return ret;
 }
 
 bool GpioHandler::isInitialized() {
@@ -97,64 +102,54 @@ TesterError GpioHandler::writePortentaGpio(String gpio, int value) {
     return opStatus;
 }
 
-TesterError GpioHandler::setPortentaGpioDirection(String gpio, bool out) {
     TesterError opStatus = NO_ERROR;
-
-    if(out)
-        opStatus = PTRINT.sendCommand("echo out > gpio" + gpio + "/direction", NULL);
-    else
-        opStatus = PTRINT.sendCommand("echo in > gpio" + gpio + "/direction", NULL);
 
     return opStatus;
 }
 
 void GpioHandler::portentaInputTestRoutine(String portentaGpio, int gigaGpio) {
-    int portentaGpioStatus = 0, gigaGpioStatus = 0;
+    TesterError opStatus = NO_ERROR;
+    int portentaGpioStatus = 0;
 
     pinMode(gigaGpio, OUTPUT);
     digitalWrite(gigaGpio, LOW);
     delay(200);
 
-    this->readPortentaGpio(portentaGpio, &portentaGpioStatus);
-    Serial.println("[D] ----------------------------------------------------");
-    Serial.println("VALUE BEFORE: " + String(portentaGpioStatus));
-    Serial.println("[D] ----------------------------------------------------");
-
-    if(portentaGpioStatus == gigaGpioStatus){
-        gigaGpioStatus = (gigaGpioStatus+1)%2;
+    // Simple input test
+    opStatus = this->readPortentaGpio(portentaGpio, &portentaGpioStatus);
+    if(opStatus == NO_ERROR && portentaGpioStatus == 0){
         digitalWrite(gigaGpio, HIGH);
-
         delay(200);
-        this->readPortentaGpio(portentaGpio, &portentaGpioStatus);
-        Serial.println("[D] ----------------------------------------------------");
-        Serial.println("VALUE AFTER: " + String(portentaGpioStatus));
-        Serial.println("[D] ----------------------------------------------------");
-        if(portentaGpioStatus != gigaGpioStatus){
-            this->report += "GPIO " + portentaGpio + " test failed\n";
+
+        opStatus = this->readPortentaGpio(portentaGpio, &portentaGpioStatus);
+        if(opStatus == NO_ERROR && portentaGpioStatus == 1){
+            this->report += "GPIO " + portentaGpio + " input test passed\n";
         }else{
-            this->report += "GPIO " + portentaGpio + " test passed\n";
+            this->report += "GPIO " + portentaGpio + " input test failed\n";
         }
     }else{
-        this->report += "GPIO " + portentaGpio + " test failed\n";
+        this->report += "GPIO " + portentaGpio + " input test failed\n";
+    }
     }
 }
 
 void GpioHandler::portentaOutputTestRoutine(String portentaGpio, int gigaGpio) {
-    int portentaGpioStatus = 0, gigaGpioStatus = 0;
-
+    TesterError opStatus = NO_ERROR;
     pinMode(gigaGpio, INPUT);
-    gigaGpioStatus = digitalRead(gigaGpio);
 
-    this->readPortentaGpio(portentaGpio, &portentaGpioStatus);
-    if(portentaGpioStatus == gigaGpioStatus){
-        this->togglePortentaGpio(portentaGpio);
-        this->readGigaGpio(gigaGpio, &gigaGpioStatus);
-        if(portentaGpioStatus != gigaGpioStatus){
-            this->report += "GPIO " + portentaGpio + " test failed\n";
+    opStatus = this->writePortentaGpio(portentaGpio, 0);
+    delay(200);
+
+    if(opStatus == NO_ERROR && digitalRead(gigaGpio) == LOW){
+        opStatus = this->writePortentaGpio(portentaGpio, 1);
+        delay(200);
+
+        if(opStatus == NO_ERROR && digitalRead(gigaGpio) == HIGH){
+            this->report += "GPIO " + portentaGpio + " output test passed\n";
         }else{
-            this->report += "GPIO " + portentaGpio + " test passed\n";
+            this->report += "GPIO " + portentaGpio + " output test failed\n";
         }
     }else{
-        this->report += "GPIO " + portentaGpio + " test failed\n";
+        this->report += "GPIO " + portentaGpio + " output test failed\n";
     }
 }
