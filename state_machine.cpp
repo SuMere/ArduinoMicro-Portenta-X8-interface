@@ -335,11 +335,18 @@ TesterError StateMachine::gpioMode() {
         gigaGpio = PTRINT.requestInput("Insert Giga GPIO number: ").toInt();
         GpioHandler gpioHandler = GpioHandler();
         opStatus = gpioHandler.initTests();
+
         if(opStatus == NO_ERROR) {
             opStatus = gpioHandler.testGpio(portentaGpio, gigaGpio, true);
         }
+
+        if(opStatus == NO_ERROR) {
+            opStatus = gpioHandler.testGpio(portentaGpio, gigaGpio, false);
+        }
+
+        Serial.println(gpioHandler.getReport());
     }
-    
+
     if(opStatus != NO_ERROR) {
         this->setState(STATE_ERROR);
     }
