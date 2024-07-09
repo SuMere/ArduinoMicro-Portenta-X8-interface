@@ -16,11 +16,12 @@ class GpioHandler {
 
     private:
         String report;
-        TesterError readPortentaGpio(String gpio, int *value);
         bool initialized;
 
         bool checkPortentaGpioAvalability(String gpio);
         TesterError setPortentaGpioDirection(String gpio, bool out);
+        TesterError readPortentaGpio(String gpio, int *value);
+        TesterError writePortentaGpio(String gpio, int value);
 
         void portentaInputTestRoutine(String portentaGpio, int gigaGpio);
         void portentaOutputTestRoutine(String portentaGpio, int gigaGpio);
