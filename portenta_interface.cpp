@@ -119,11 +119,11 @@ void PortentaInterface::interactiveMode() {
     while(true) {
         if(Serial.available()) {
             tmp = Serial.readString();
-            if(tmp == "@exit") {
+            if(tmp == "@exit\n") {
                 break;
+            } else {
+                Serial1.print(tmp);
             }
-            Serial1.print(tmp);
-           
         }
         this -> readUnusedOutput();
     }
