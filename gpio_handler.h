@@ -16,10 +16,6 @@ class GpioHandler {
 
     private:
         String report;
-        TesterError toggleGigaGpio(int gpio);
-        TesterError togglePortentaGpio(String gpio);
-
-        TesterError readGigaGpio(int gpio, int *value);
         TesterError readPortentaGpio(String gpio, int *value);
         bool initialized;
 

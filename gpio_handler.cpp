@@ -51,55 +51,14 @@ String GpioHandler::getReport() {
     return this->report;
 }
 
-TesterError GpioHandler::toggleGigaGpio(int gpio) {
-    TesterError opStatus = NO_ERROR;
 
-    pinMode(gpio, INPUT);
-    bool status = digitalRead(gpio);
-    delay(500);
-    pinMode(gpio, OUTPUT);
-    digitalWrite(gpio, !status);
-
-    Serial.println("[D] ----------------------------------------------------");
-    Serial.println("Giga GPIO: "+ String(gpio)+" VALUE: " + String(!status));
-    Serial.println("[D] ----------------------------------------------------");
-
-    return opStatus;
-}
-
-TesterError GpioHandler::togglePortentaGpio(String gpio) {
-    TesterError opStatus = NO_ERROR;
-    int portentaGpioStatus = -1;
-
-    opStatus = this->setPortentaGpioDirection(gpio, true);
-    delay(1000);
-    if(opStatus == NO_ERROR){
-        opStatus = this->readPortentaGpio(gpio, &portentaGpioStatus);
-        delay(1000);
         if(opStatus == NO_ERROR){
-            if(portentaGpioStatus)
-                opStatus = PTRINT.sendCommand("echo 0 > gpio" + gpio + "/value", NULL);
-            else
-                opStatus = PTRINT.sendCommand("echo 1 > gpio" + gpio + "/value", NULL);
         }
     }
 
     return opStatus;
 }
 
-TesterError GpioHandler::readGigaGpio(int gpio, int *value) {
-    TesterError opStatus = NO_ERROR;
-
-    pinMode(gpio, INPUT);
-    bool status = digitalRead(gpio);
-
-    *value = int(status);
-
-    Serial.println("[D] ----------------------------------------------------");
-    Serial.println("Giga GPIO: "+ String(gpio)+" VALUE: " + String(*value));
-    Serial.println("[D] ----------------------------------------------------");
-
-    return opStatus;
 }
 
 TesterError GpioHandler::readPortentaGpio(String gpio, int *value) {
