@@ -13,12 +13,8 @@ TesterError waitForString(String str, time_t time, String *ret) {
     if(current.indexOf(str) < 0){
         Serial.println("[!]- STRING NOT FOUND");
         opStatus = ERROR_TIMEOUT;
-    }else{
-        Serial.println("[*]- STRING FOUND");
     }
-
     *ret = current;
-
     return opStatus;
 }
 
