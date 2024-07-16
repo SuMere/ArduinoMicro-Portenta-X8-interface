@@ -1,5 +1,7 @@
 #include "gpio_handler.h"
 
+#define GPIO_PATH "/sys/class/gpio"
+
 GpioHandler::GpioHandler() {
     this->report = "";
     this->initialized = false;
@@ -10,9 +12,9 @@ GpioHandler::~GpioHandler() {
 
 TesterError GpioHandler::initTests() {
     TesterError opStatus = NO_ERROR;
-    String retStr = "", expectedRet = "/sys/class/gpio";
+    String retStr = "", expectedRet = GPIO_PATH;
 
-    opStatus = PTRINT.sendCommand("cd /sys/class/gpio", &retStr,
+    opStatus = PTRINT.sendCommand("cd "+String(GPIO_PATH), &retStr,
                                                 &expectedRet, true, true);
 
     if(opStatus == NO_ERROR){
