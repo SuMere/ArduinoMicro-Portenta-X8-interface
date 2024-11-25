@@ -22,6 +22,7 @@ enum file_op {
 #define _GPIO                 "+GPIO"
 #define _ADC                  "+ADC"
 #define _DAC                  "+DAC"
+#define _PWM                  "+PWM"
 #define _CAN                  "+CAN"
 #define _I2C                  "+I2C"
 #define _SPI                  "+SPI"
