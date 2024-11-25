@@ -4,11 +4,11 @@
 #include "at_handler.h"
 #include "gpio_handler.h"
 #include "pwm_handler.h"
-#include "adc_handler.h"
+#include "dac_handler.h"
 #include "can_handler.h"
 #include "uart_handler.h"
 
-#define MAX_GPIO_NUMBER 80
+#define MAX_GPIO_NUMBER 94
 #define MAX_ADC_NUMBER 7
 #define MAX_UART_NUMBER 4
 
@@ -94,7 +94,7 @@ void CAtHandler::add_cmds_ci() {
     };
 
     /* ....................................................................... */
-    command_table[_ADC] = [this](auto & srv, auto & parser) {
+    command_table[_PWM] = [this](auto & srv, auto & parser) {
     /* ....................................................................... */
         int interfaceAdc = 0;
         switch (parser.cmd_mode) {
@@ -115,7 +115,7 @@ void CAtHandler::add_cmds_ci() {
                 }
 
                 PwmHandler handler = PwmHandler();
-                float pulseLenght = 0;
+                int pulseLenght = 0;
                 TesterError resp = handler.readPwmIn(interfaceAdc, &pulseLenght);
 
                 if (resp == NO_ERROR){
@@ -126,6 +126,32 @@ void CAtHandler::add_cmds_ci() {
                 } else {
                     srv.write_response_prompt();
                     srv.write_str("Error reading ADC");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+            }
+            case chAT::CommandMode::Write:{
+                if (parser.args.size() != 2){
+                    srv.write_response_prompt();
+                    srv.write_str("Invalid number of arguments");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+
+                int pwmChannel = atoi(parser.args[0].c_str());
+                int dutyCycle = atoi(parser.args[1].c_str());
+
+                PwmHandler handler = PwmHandler();
+                TesterError resp = handler.setPwmOut(pwmChannel, dutyCycle);
+
+                if (resp == NO_ERROR){
+                    srv.write_response_prompt();
+                    srv.write_str(("#"+String(pwmChannel)+" DutyCycle %:"+String(dutyCycle)).c_str());
+                    srv.write_line_end();
+                    return chAT::CommandStatus::OK;
+                } else {
+                    srv.write_response_prompt();
+                    srv.write_str("Error writing PWM");
                     srv.write_line_end();
                     return chAT::CommandStatus::ERROR;
                 }
@@ -152,7 +178,7 @@ void CAtHandler::add_cmds_ci() {
                 }
 
                 float voltage = atof(parser.args[0].c_str());
-                AdcHandler handler = AdcHandler();
+                DacHandler handler = DacHandler();
                 TesterError resp = handler.setOutputVoltage(voltage);
 
                 if (resp == NO_ERROR){

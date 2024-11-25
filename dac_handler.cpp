@@ -1,23 +1,24 @@
-#include "adc_handler.h"
+#include "dac_handler.h"
 
 #define GIGA_DAC A12
 
-AdcHandler::AdcHandler() {}
+DacHandler::DacHandler() {}
 
-AdcHandler::~AdcHandler() {}
+DacHandler::~DacHandler() {}
 
-int AdcHandler::fromVoltageToDacCount(float voltage) {
+int DacHandler::fromVoltageToDacCount(float voltage) {
     int count = static_cast<int>(voltage * 255 / 3.3);
     return count;
 }
 
-TesterError AdcHandler::setOutputVoltage(float voltage) {
+TesterError DacHandler::setOutputVoltage(float voltage) {
     if (voltage < 0 || voltage > 3.3) {
         return ERROR_INVALID_ARGUMENT;
     }
     
     int count = this->fromVoltageToDacCount(voltage);
 
+    pinMode(GIGA_DAC, OUTPUT);
     analogWrite(GIGA_DAC, count);
     return NO_ERROR;
 }

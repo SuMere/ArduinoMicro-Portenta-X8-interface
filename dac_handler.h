@@ -2,10 +2,10 @@
 
 #include "common.h"
 
-class AdcHandler {
+class DacHandler {
     public:
-        AdcHandler();
-        ~AdcHandler();
+        DacHandler();
+        ~DacHandler();
         TesterError setOutputVoltage(float voltage);
 
     private:
