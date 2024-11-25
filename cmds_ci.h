@@ -7,6 +7,7 @@
 #include "dac_handler.h"
 #include "can_handler.h"
 #include "uart_handler.h"
+#include "i2c_handler.h"
 
 #define MAX_GPIO_NUMBER 94
 #define MAX_ADC_NUMBER 7
@@ -273,11 +274,221 @@ void CAtHandler::add_cmds_ci() {
     command_table[_I2C] = [this](auto & srv, auto & parser) {
     /* ....................................................................... */
         switch (parser.cmd_mode) {
-            case chAT::CommandMode::Test:{
+            case chAT::CommandMode::Read:{  // READ MODE
+                Serial.println("I2C READ");
+                Serial.println("ARGS SIZE");
+                Serial.println(parser.args.size());
+                if (parser.args.size() != 1 && parser.args.size() != 2 && parser.args.size() != 4) {
+                    srv.write_response_prompt();
+                    srv.write_str("Invalid number of arguments");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+                I2CHandler handler = I2CHandler();
+                uint8_t bus_number = atoi(parser.args[0].c_str());
+                if(bus_number < 0 || bus_number > 3){
+                    srv.write_response_prompt();
+                    srv.write_str("Invalid I2C bus number");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+                uint8_t *data = NULL;
+                size_t data_size = 1;
 
-                // call the function to test the I2C
-                return chAT::CommandStatus::OK; //maybe this should be a return value from the test function
+                if(parser.args.size() == 1){
+                    if(handler.i2cRead(bus_number, 0, 0, data, data_size, false) != NO_ERROR){
+                        srv.write_response_prompt();
+                        srv.write_str("Error reading I2C");
+                        srv.write_line_end();
+                        return chAT::CommandStatus::ERROR;
+                    }else{
+                        srv.write_response_prompt();
+                        srv.write_str("I2C read result from device, data: ");
+                        for (int i = 0; i < data_size; i++){
+                            srv.write_str(String(data[i], HEX).c_str());
+                        }
+                        srv.write_line_end();
+                        return chAT::CommandStatus::OK; 
+                    }
+                } else if (parser.args.size() == 2){
+                    Serial.println("STEP -3");
+                    if (parser.args[1] == "SCAN"){
+                        Serial.println("STEP -2");
+                        uint8_t scan_res[116] = {0};
+                        Serial.println("STEP -1");
+                        Serial.flush();
+                        handler.i2cScan(bus_number, scan_res);
+                        srv.write_response_prompt();
+                        srv.write_str("I2C scan result: ");
+                        for (int i = 0; i < 116; i++){
+                            if(scan_res[i] == 1){
+                                srv.write_str(String(i+3, HEX).c_str());
+                            }
+                        }
+                        srv.write_line_end();
+                        return chAT::CommandStatus::OK;
+                    } else {
+                        srv.write_response_prompt();
+                        srv.write_str("Invalid argument");
+                        srv.write_line_end();
+                        return chAT::CommandStatus::ERROR;
+                    }
+                }
+
+                Serial.println("STEP 0");
+
+                uint8_t reg_addr = 0;
+                uint8_t address = (uint8_t)strtol(parser.args[1].c_str(), NULL, 16);
+                Serial.println("STEP 1");
+                bool has_reg_addr = (parser.args[2] != "");
+                if (address < 0 || address > 127){
+                    srv.write_response_prompt();
+                    srv.write_str("Invalid I2C address");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+
+                Serial.println("STEP 2");
+
+                if(has_reg_addr){
+                    reg_addr = (uint8_t)strtol(parser.args[2].c_str(), NULL, 16);
+                    Serial.println("STEP 2.1");
+                }
+                data_size = parser.args[3] != "" ? atoi(parser.args[3].c_str()) : 1;
+
+                Serial.println("STEP 3");
+                data = (uint8_t *)malloc(data_size);
+
+                if(handler.i2cRead(bus_number, address, reg_addr, data, data_size, has_reg_addr) != NO_ERROR){
+                    srv.write_response_prompt();
+                    srv.write_str("Error reading I2C");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }else{
+                    Serial.println("STEP 4");
+                    String message ="I2C read result from device "+String(address, HEX);
+                    if(has_reg_addr){
+                        message += ", register: "+String(reg_addr, HEX);
+                    }
+
+                    Serial.println("STEP 5");
+                    message += ", data: ";
+                    srv.write_response_prompt();
+                    srv.write_str(message.c_str());
+                    for (int i = 0; i < data_size; i++){
+                        Serial.println("STEP 5.1");
+                        srv.write_str(String(data[i], HEX).c_str());
+                    }
+                    srv.write_line_end();
+                    free(data);
+                    return chAT::CommandStatus::OK;
+                }
             }
+
+            case chAT::CommandMode::Write:{  // WRITE MODE
+                if (parser.args.size() != 4) {
+                    srv.write_response_prompt();
+                    srv.write_str("Invalid number of arguments");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+
+                I2CHandler handler = I2CHandler();
+                uint8_t bus_number = atoi(parser.args[0].c_str());
+                if (bus_number < 0 || bus_number > 3){
+                    srv.write_response_prompt();
+                    srv.write_str("Invalid I2C bus number");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+
+                uint8_t address = (uint8_t)strtol(parser.args[1].c_str(), NULL, 16);
+                if (address < 0 || address > 127){
+                    srv.write_response_prompt();
+                    srv.write_str("Invalid I2C address");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+
+                uint8_t data = (uint8_t)strtol(parser.args[2].c_str(), NULL, 16);
+                size_t data_size = parser.args[2].length();
+                uint8_t reg_addr = 0;
+                bool has_reg_addr = (parser.args[3] != "");
+                if(has_reg_addr){
+                    reg_addr = (uint8_t)strtol(parser.args[3].c_str(), NULL, 16);
+                }
+
+                if (handler.i2cWrite(bus_number, address, reg_addr, &data, data_size, has_reg_addr) == ERROR_INVALID_STATE){
+                    String message = "I2C"+String(bus_number)+" not configured for writing";
+                    srv.write_response_prompt();
+                    srv.write_str(message.c_str());
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+
+                return chAT::CommandStatus::OK;
+            }
+
+            case chAT::CommandMode::Test:{  // CONFIG MODE
+                if (parser.args.size() > 3) {
+                    srv.write_response_prompt();
+                    srv.write_str("Invalid number of arguments");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+                I2CHandler handler = I2CHandler();
+                uint8_t bus_number = atoi(parser.args[0].c_str());
+                
+                if(bus_number < 0 || bus_number > 3){
+                    srv.write_response_prompt();
+                    srv.write_str("Invalid I2C bus number");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+                
+                if (parser.args.size() == 1) { //DEFAUL MODE = CONTROLLER @ 100KHz
+                    handler.setConfiguration(bus_number, 0, 100000, true);
+                    return chAT::CommandStatus::OK;
+                } else if (parser.args.size() == 2) { //DEFAUL MODE = CONTROLLER @ configured speed
+                    uint32_t bus_speed = atoi(parser.args[1].c_str());
+                    handler.setConfiguration(bus_number, 0, bus_speed, true);
+                    return chAT::CommandStatus::OK;
+                } else if (parser.args.size() == 3) { // FULL CONFIGURATION
+                    uint32_t bus_speed = atoi(parser.args[2].c_str());
+                    uint8_t address = 0;
+                    bool is_controller = true;
+                    
+                    if (parser.args[1] != ""){
+                        is_controller = false;
+                        address = (uint8_t)strtol(parser.args[1].c_str(), NULL, 16);
+                        if (address < 0 || address > 127){
+                            srv.write_response_prompt();
+                            srv.write_str("Invalid I2C address");
+                            srv.write_line_end();
+                            return chAT::CommandStatus::ERROR;
+                        }
+                    }
+                    handler.setConfiguration(bus_number, address, bus_speed, is_controller);
+                    return chAT::CommandStatus::OK;
+                }
+                // call the function to test the I2C
+                return chAT::CommandStatus::OK;
+            }
+
+            case chAT::CommandMode::Run:{  // CLEAR CONFIG MODE
+                if (parser.args.size() != 1) {
+                    srv.write_response_prompt();
+                    srv.write_str("Invalid number of arguments");
+                    srv.write_line_end();
+                    return chAT::CommandStatus::ERROR;
+                }
+
+                I2CHandler handler = I2CHandler();
+                uint8_t bus_number = atoi(parser.args[0].c_str());
+                handler.unsetConfiguration(bus_number);
+                return chAT::CommandStatus::OK; //maybe this should be a return value from the run function
+            }
+
             default:
                 srv.write_line_end();
                 return chAT::CommandStatus::ERROR;
@@ -291,7 +502,7 @@ void CAtHandler::add_cmds_ci() {
             case chAT::CommandMode::Test:{
 
                 // call the function to test the SPI
-                return chAT::CommandStatus::OK; //maybe this should be a return value from the test function
+                return chAT::CommandStatus::OK;
             }
             default:
                 srv.write_line_end();
@@ -404,7 +615,7 @@ void CAtHandler::add_cmds_ci() {
 
 
                 // call the function to test the I2S
-                return chAT::CommandStatus::OK; //maybe this should be a return value from the test function
+                return chAT::CommandStatus::OK;
             }
             default:
                 srv.write_line_end();
