@@ -7,5 +7,6 @@ class PwmHandler {
         PwmHandler();
         ~PwmHandler();
 
-        TesterError readPwmIn(int adcChannel, float *output);
+        TesterError readPwmIn(int adcChannel, int *output);
+        TesterError setPwmOut(int pwmChannel, int dutyCycle);
 };

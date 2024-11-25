@@ -7,7 +7,7 @@ PwmHandler::PwmHandler() {}
 
 PwmHandler::~PwmHandler() {}
 
-TesterError PwmHandler::readPwmIn(int adcChannel, float *output) {
+TesterError PwmHandler::readPwmIn(int adcChannel, int *output) {
     TesterError opStatus = NO_ERROR;
     float pulseLenght = 0;
     if(adcChannel < 0 || adcChannel > 7){
@@ -21,7 +21,28 @@ TesterError PwmHandler::readPwmIn(int adcChannel, float *output) {
         delay(50);
     }
 
-    *output = pulseLenght/PWM_SAMPLES;
+    *output = int(pulseLenght/PWM_SAMPLES);
+
+    return NO_ERROR;
+}
+
+
+//TODO IMPROVE THIS STARTINH FROM HERE [https://github.com/arduino/ArduinoCore-mbed/blob/main/cores/arduino/wiring_analog.cpp#L45-L99]
+
+TesterError PwmHandler::setPwmOut(int pwmChannel, int dutyCycle_percentage) {
+    TesterError opStatus = NO_ERROR;
+    if(pwmChannel < 2 ||
+       pwmChannel > 13 ||
+       dutyCycle_percentage < 0 ||
+       dutyCycle_percentage > 100)
+    {
+        return ERROR_INVALID_ARGUMENT;
+    }
+
+    int dutyCycle = map(dutyCycle_percentage, 0, 100, 0, 255);
+    Serial.print("Duty cycle: ");
+    Serial.println(dutyCycle);
+    analogWrite(pwmChannel, dutyCycle);
 
     return NO_ERROR;
 }
