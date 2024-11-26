@@ -7,9 +7,11 @@
 
 using namespace SudoMaker;
 
+class CmdHandler;
+
 class CAtHandler {
 private:
-   std::unordered_map<std::string, std::function<chAT::CommandStatus(chAT::Server&, chAT::ATParser&)>> command_table;
+   std::unordered_map<std::string, CmdHandler *> command_table;
    chAT::Server at_srv;
    HardwareSerial *serial;
 
@@ -20,7 +22,7 @@ public:
    CAtHandler(HardwareSerial *s);
    CAtHandler() = delete ;
    void run();
+   void registerCommands(std::string cmd, CmdHandler *handler);
 };
-
 
 #endif
