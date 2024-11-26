@@ -131,28 +131,19 @@ TesterError I2CHandler::i2cRead(uint8_t i2c, uint8_t address, uint8_t register_a
     }
 
     if(is_controller){
-        Serial.println("STEP 3.1");
-        curr_i2c->beginTransmission(address);
-        Serial.println("STEP 3.2");
-        if(register_address != 0) {
-            Serial.println("STEP 3.2.1");
-            Serial.println(size);
-            Serial.println(address);
-            curr_i2c->requestFrom(address, size);
-            if (has_reg_addr) {
-                Serial.println("STEP 3.2.2");
-                curr_i2c->write(register_address);
-            } 
+        if(has_reg_addr){
+            curr_i2c->beginTransmission(address);
+            curr_i2c->write(register_address);
+            if(curr_i2c->endTransmission() != 0) {
+                return ERROR_INVALID_RESPONSE;
+            }
         }
-        Serial.println("STEP 3.3");
-        if(curr_i2c->endTransmission(true) == 0) {
-            Serial.println("STEP 3.3.1");
-            Serial.flush();
-            opStatus = handleControllerRead(curr_i2c, data, size);
-        }else{
-            Serial.println("STEP 3.3.2");
-            opStatus = ERROR_INVALID_RESPONSE;
+        if(curr_i2c->requestFrom(address, size) == 0) {
+            return ERROR_INVALID_RESPONSE;
         }
+
+
+        opStatus = handleControllerRead(curr_i2c, data, size);
     }else{
         opStatus = handlePeripheralRead(i2c, data);
     }
