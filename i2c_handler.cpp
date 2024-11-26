@@ -299,9 +299,9 @@ TesterError I2CHandler::setConfiguration(uint8_t i2c, uint8_t address, uint32_t 
     }
 
     if(is_controller) {
-        curr_i2c->begin(address);
-    } else {
         curr_i2c->begin();
+    } else {
+        curr_i2c->begin(address);
     }
 
     curr_i2c->setClock(frequency);
