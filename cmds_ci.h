@@ -436,11 +436,11 @@ void CAtHandler::add_cmds_ci() {
                     handler.setConfiguration(bus_number, 0, 100000, true);
                     return chAT::CommandStatus::OK;
                 } else if (parser.args.size() == 2) { //DEFAUL MODE = CONTROLLER @ configured speed
-                    uint32_t bus_speed = atoi(parser.args[1].c_str());
+                    uint32_t bus_speed = atoi(parser.args[1].c_str()) * 1000;
                     handler.setConfiguration(bus_number, 0, bus_speed, true);
                     return chAT::CommandStatus::OK;
                 } else if (parser.args.size() == 3) { // FULL CONFIGURATION
-                    uint32_t bus_speed = atoi(parser.args[2].c_str());
+                    uint32_t bus_speed = atoi(parser.args[2].c_str()) * 1000;
                     uint8_t address = 0;
                     bool is_controller = true;
                     
