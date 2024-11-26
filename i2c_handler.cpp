@@ -157,8 +157,6 @@ TesterError I2CHandler::i2cRead(uint8_t i2c, uint8_t address, uint8_t register_a
         opStatus = handlePeripheralRead(i2c, data);
     }
 
-    Serial.println("STEP 3.4");
-
     return opStatus;
 }
 
@@ -211,9 +209,7 @@ TesterError I2CHandler::i2cWrite(uint8_t i2c, uint8_t address, uint8_t register_
 
 TesterError I2CHandler::i2cScan(uint8_t i2c, uint8_t *addresses) {
     TwoWire *curr_i2c = NULL;
-    Serial.println("STEP 0");
     uint8_t tmp_cfg = get_i2c_config();
-    Serial.println("STEP 0.1");
     switch(i2c)
     {
         case 0:
@@ -240,20 +236,15 @@ TesterError I2CHandler::i2cScan(uint8_t i2c, uint8_t *addresses) {
     if(!curr_i2c) {
         return ERROR_INIT_FAILED;
     }
-    Serial.println("STEP 0.2");
     for (uint8_t i = 3; i < 119; i++)
     {
-        Serial.println("STEP 1");
         Serial.flush();
         curr_i2c->beginTransmission(i);
-        Serial.println("STEP 2");
         if (curr_i2c->endTransmission() == 0)
         {
-            Serial.println("STEP 2.1");
             addresses[i-3] = 1;
             return NO_ERROR;
         }
-        Serial.println("STEP 3");
     }
     return NO_ERROR;
 }
@@ -307,8 +298,6 @@ TesterError I2CHandler::setConfiguration(uint8_t i2c, uint8_t address, uint32_t 
         return ERROR_INIT_FAILED;
     }
 
-    Serial.println("ABOUT TO CONFIG, bus number = ");
-    Serial.print(i2c);
     if(is_controller) {
         curr_i2c->begin(address);
     } else {

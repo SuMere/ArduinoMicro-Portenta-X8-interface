@@ -275,9 +275,6 @@ void CAtHandler::add_cmds_ci() {
     /* ....................................................................... */
         switch (parser.cmd_mode) {
             case chAT::CommandMode::Read:{  // READ MODE
-                Serial.println("I2C READ");
-                Serial.println("ARGS SIZE");
-                Serial.println(parser.args.size());
                 if (parser.args.size() != 1 && parser.args.size() != 2 && parser.args.size() != 4) {
                     srv.write_response_prompt();
                     srv.write_str("Invalid number of arguments");
@@ -311,11 +308,8 @@ void CAtHandler::add_cmds_ci() {
                         return chAT::CommandStatus::OK; 
                     }
                 } else if (parser.args.size() == 2){
-                    Serial.println("STEP -3");
                     if (parser.args[1] == "SCAN"){
-                        Serial.println("STEP -2");
                         uint8_t scan_res[116] = {0};
-                        Serial.println("STEP -1");
                         Serial.flush();
                         handler.i2cScan(bus_number, scan_res);
                         srv.write_response_prompt();
@@ -335,11 +329,9 @@ void CAtHandler::add_cmds_ci() {
                     }
                 }
 
-                Serial.println("STEP 0");
 
                 uint8_t reg_addr = 0;
                 uint8_t address = (uint8_t)strtol(parser.args[1].c_str(), NULL, 16);
-                Serial.println("STEP 1");
                 bool has_reg_addr = (parser.args[2] != "");
                 if (address < 0 || address > 127){
                     srv.write_response_prompt();
@@ -348,15 +340,12 @@ void CAtHandler::add_cmds_ci() {
                     return chAT::CommandStatus::ERROR;
                 }
 
-                Serial.println("STEP 2");
 
                 if(has_reg_addr){
                     reg_addr = (uint8_t)strtol(parser.args[2].c_str(), NULL, 16);
-                    Serial.println("STEP 2.1");
                 }
                 data_size = parser.args[3] != "" ? atoi(parser.args[3].c_str()) : 1;
 
-                Serial.println("STEP 3");
                 data = (uint8_t *)malloc(data_size);
 
                 if(handler.i2cRead(bus_number, address, reg_addr, data, data_size, has_reg_addr) != NO_ERROR){
@@ -365,18 +354,15 @@ void CAtHandler::add_cmds_ci() {
                     srv.write_line_end();
                     return chAT::CommandStatus::ERROR;
                 }else{
-                    Serial.println("STEP 4");
                     String message ="I2C read result from device "+String(address, HEX);
                     if(has_reg_addr){
                         message += ", register: "+String(reg_addr, HEX);
                     }
 
-                    Serial.println("STEP 5");
                     message += ", data: ";
                     srv.write_response_prompt();
                     srv.write_str(message.c_str());
                     for (int i = 0; i < data_size; i++){
-                        Serial.println("STEP 5.1");
                         srv.write_str(String(data[i], HEX).c_str());
                     }
                     srv.write_line_end();

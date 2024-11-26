@@ -40,8 +40,6 @@ TesterError PwmHandler::setPwmOut(int pwmChannel, int dutyCycle_percentage) {
     }
 
     int dutyCycle = map(dutyCycle_percentage, 0, 100, 0, 255);
-    Serial.print("Duty cycle: ");
-    Serial.println(dutyCycle);
     analogWrite(pwmChannel, dutyCycle);
 
     return NO_ERROR;
