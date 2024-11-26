@@ -3,6 +3,7 @@
 #define REGISTER_NUM 2
 
 uint8_t curr_i2c_config = 0;
+uint8_t curr_i2c_periph = 0;
 uint8_t peripheral_received = 0;
 uint8_t register0[REGISTER_NUM];
 uint8_t register1[REGISTER_NUM];
@@ -93,6 +94,17 @@ TesterError I2CHandler::i2cRead(uint8_t i2c, uint8_t address, uint8_t register_a
     uint8_t tmp_cfg = get_i2c_config();
     bool is_controller = true;
 
+
+    int i2cMask = 1 << i2c;
+            if(!(tmp_cfg & i2cMask)){
+                return ERROR_INVALID_STATE;
+            }
+            if(tmp_cfg & I2C0_PERIPHERAL) {
+                is_controller = false;
+            }
+    if (tmp_cfg & i2cMask) {
+
+    }
     switch(i2c)
     {
         case 0:

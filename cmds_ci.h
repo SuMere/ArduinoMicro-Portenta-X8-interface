@@ -2,12 +2,6 @@
 #define CI_COMMANDS_H
 
 #include "at_handler.h"
-#include "gpio_handler.h"
-#include "pwm_handler.h"
-#include "dac_handler.h"
-#include "can_handler.h"
-#include "uart_handler.h"
-#include "i2c_handler.h"
 
 #define MAX_GPIO_NUMBER 94
 #define MAX_ADC_NUMBER 7
