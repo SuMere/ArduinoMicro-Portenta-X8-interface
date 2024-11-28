@@ -2,11 +2,16 @@
 
 #include "common.h"
 
-class PwmHandler {
-    public:
-        PwmHandler();
-        ~PwmHandler();
+#include "cmd_handler.h"
 
-        TesterError readPwmIn(int adcChannel, int *output);
-        TesterError setPwmOut(int pwmChannel, int dutyCycle);
+class PwmHandler : public CmdHandler {
+    private:
+        virtual chAT::CommandStatus handle_read(chAT::Server&, chAT::ATParser&);
+        virtual chAT::CommandStatus handle_write(chAT::Server&, chAT::ATParser&);
+
+        TesterError read_pwm_in(int adcChannel, int *output);
+        TesterError set_pwm_out(int pwmChannel, int dutyCycle);
+    public:
+        PwmHandler(CAtHandler *parent);
+        virtual ~PwmHandler() {}
 };
