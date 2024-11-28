@@ -4,12 +4,6 @@
 
 #define MAX_GPIO_NUMBER 94
 
-GpioHandler::GpioHandler(CAtHandler *parent)
-    : CmdHandler(parent)
-{
-    parent->registerCommands("+GPIO", this);
-}
-
 chAT::CommandStatus GpioHandler::handle_read(chAT::Server &srv, chAT::ATParser &parser)
 {
     if (parser.args.size() != 1){
@@ -87,19 +81,17 @@ TesterError GpioHandler::set_gpio_status(int gpio, int value)
 {
     TesterError opStatus = NO_ERROR;
 
-#ifdef DAC_0 || DAC
-    if (gpio == DAC_0 || gpio == DAC) {
-        if(value == 1)
-            analogWrite(gpio, 255);
-        else{
-            analogWrite(gpio, 0);
-        }
-        return opStatus;
-    }
+    if (false
+#ifdef DAC
+	    || gpio == DAC
 #endif
-
+#ifdef DAC_0
+	    || gpio == DAC_0
+#endif
 #ifdef DAC_1
-    if (gpio == DAC_1) {
+	    || gpio == DAC_1
+#endif
+    ) {
         if(value == 1)
             analogWrite(gpio, 255);
         else{
@@ -107,7 +99,6 @@ TesterError GpioHandler::set_gpio_status(int gpio, int value)
         }
         return opStatus;
     }
-#endif
 
     pinMode(gpio, OUTPUT);
     digitalWrite(gpio, value);

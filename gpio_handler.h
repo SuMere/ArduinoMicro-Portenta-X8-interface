@@ -13,6 +13,6 @@ class GpioHandler : public CmdHandler {
         TesterError set_gpio_status(int gpio, int value);
 
     public:
-        GpioHandler(CAtHandler *parent);
+        GpioHandler() : CmdHandler("+GPIO") {}
         virtual ~GpioHandler() {}
 };

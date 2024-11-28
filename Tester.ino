@@ -3,20 +3,19 @@
 
 #define SERIAL_AT Serial
 
-static CAtHandler atHandler(&SERIAL_AT);
-
-GpioHandler gpio_handler(&atHandler);
-CanHandler can_handler(&atHandler);
-I2CHandler i2c_handler(&atHandler);
-PwmHandler pwm_handler(&atHandler);
-DacHandler dac_handler(&atHandler);
-UartHandler uart_handler(&atHandler);
+GpioHandler gpio_handler;
+CanHandler can_handler;
+I2CHandler i2c_handler;
+PwmHandler pwm_handler;
+DacHandler dac_handler;
+UartHandler uart_handler;
 
 void setup() {
-  Serial.begin(115200);
+  SERIAL_AT.begin(115200);
+  at_handler().begin(&SERIAL_AT);
   delay(1000);
 }
 
 void loop() {
-  atHandler.run();
+  at_handler().run();
 }
