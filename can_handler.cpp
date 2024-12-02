@@ -8,42 +8,27 @@
 
 chAT::CommandStatus CanHandler::handle_read(chAT::Server &srv, chAT::ATParser &parser) {
     if (parser.args.size() != 0) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     String frame;
     size_t size;
 
     if (receive_frame(&frame, &size) != NO_ERROR) {
-        srv.write_response_prompt();
-        srv.write_str("Error receiving frame");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error receiving frame");
     }
 
-    srv.write_response_prompt();
-    srv.write_str(("Received message is: "+frame).c_str());
-    srv.write_line_end();
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, ("Received message is: "+frame).c_str());
 }
 
 chAT::CommandStatus CanHandler::handle_write(chAT::Server &srv, chAT::ATParser &parser) {
     if(parser.args.size() != 1){
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     uint8_t *frame = (uint8_t *)malloc(parser.args[0].length()/2);
     if (frame == NULL){
-        srv.write_response_prompt();
-        srv.write_str("Memory allocation error");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Memory allocation error");
     }
 
     for (int i = 0; i < parser.args[0].length(); i+=2){
@@ -51,29 +36,20 @@ chAT::CommandStatus CanHandler::handle_write(chAT::Server &srv, chAT::ATParser &
     }
 
     if (send_frame(frame, parser.args[0].length()/2) != NO_ERROR){
-        srv.write_response_prompt();
-        srv.write_str("Error sending frame");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error sending frame");
     }
 
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, "");
 }
 
 chAT::CommandStatus CanHandler::handle_cfg_write(chAT::Server &srv, chAT::ATParser &parser) {
     if (parser.args.size() != 1) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     CanBitRate bitrate = (CanBitRate)atoi(parser.args[0].c_str());
     if (set_bitrate(bitrate) != NO_ERROR) {
-        srv.write_response_prompt();
-        srv.write_str("Error setting bitrate");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error setting bitrate");
     }
 
     is_configured = true;

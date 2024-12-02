@@ -15,13 +15,16 @@ private:
    chAT::Server at_srv;
    HardwareSerial *serial;
 
+   int last_server_client_sock;
+
    void add_cmds_ci();
 public:
-   CAtHandler();
    void begin(HardwareSerial *s);
+   CAtHandler();
    void run();
    void registerCommands(std::string cmd, CmdHandler *handler);
 };
+
 
 CAtHandler &at_handler();
 
