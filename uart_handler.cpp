@@ -5,120 +5,75 @@
 chAT::CommandStatus UartHandler::handle_read(chAT::Server &srv, chAT::ATParser &parser)
 {
     if(parser.args.size() != 1) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     int uart_number = atoi(parser.args[0].c_str());
     if(uart_number < 0 || uart_number >= UART_COUNT) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid UART number");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid UART number");
     }
 
     String message = "";
     if(is_configured(uart_number) == false) {
-        srv.write_response_prompt();
-        srv.write_str("Error UART not configured");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error UART not configured");
     }
     if(receive_message(uart_number, &message) != NO_ERROR) {
-        srv.write_response_prompt();
-        srv.write_str("Error receiving message");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error receiving message");
     }
 
-    srv.write_response_prompt();
-    srv.write_str(message.c_str());
-    srv.write_line_end();
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, message.c_str());
 }
 
 chAT::CommandStatus UartHandler::handle_write(chAT::Server &srv, chAT::ATParser &parser)
 {
     if(parser.args.size() != 2) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     int uart_number = atoi(parser.args[0].c_str());
     String message = parser.args[1].c_str();
     if(uart_number < 0 || uart_number >= UART_COUNT) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid UART number");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid UART number");
     }
 
     if(is_configured(uart_number) == false) {
-        srv.write_response_prompt();
-        srv.write_str("Error UART not configured");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error UART not configured");
     }
 
     if(send_message(uart_number, message) != NO_ERROR) {
-        srv.write_response_prompt();
-        srv.write_str("Error sending message");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error sending message");
     }
 
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, "");
 }
 
 chAT::CommandStatus UartHandler::handle_cfg_read(chAT::Server &srv, chAT::ATParser &parser)
 {
     if(parser.args.size() != 1) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     int uart_number = atoi(parser.args[0].c_str());
     if(uart_number < 0 || uart_number >= UART_COUNT) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid UART number");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid UART number");
     }
 
     if(is_configured(uart_number) == false) {
-        srv.write_response_prompt();
-        srv.write_str("UART not configured");
-        srv.write_line_end();
-        return chAT::CommandStatus::OK;
+        return write_error_message(srv, "UART not configured");
     }
 
-    srv.write_response_prompt();
-    srv.write_str("UART is configured");
-    srv.write_line_end();
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, "UART is configured");
 }
 
 chAT::CommandStatus UartHandler::handle_cfg_write(chAT::Server &srv, chAT::ATParser &parser)
 {
     if(parser.args.size() != 5) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     int uart_number = atoi(parser.args[0].c_str());
     if (uart_number < 0 || uart_number >= UART_COUNT) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid UART number");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid UART number");
     }
     
     int data_bits = atoi(parser.args[1].c_str());
@@ -127,13 +82,10 @@ chAT::CommandStatus UartHandler::handle_cfg_write(chAT::Server &srv, chAT::ATPar
     int baud_rate = atoi(parser.args[4].c_str());
 
     if(set_configuration(uart_number, data_bits, stop_bits, parity, baud_rate) != NO_ERROR) {
-        srv.write_response_prompt();
-        srv.write_str("Error configuring UART");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error configuring UART");
     }
 
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, "");
 }
 
 TesterError UartHandler::send_message(int uart_number, String message) {

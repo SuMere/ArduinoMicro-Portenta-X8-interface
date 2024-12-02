@@ -19,77 +19,51 @@ chAT::CommandStatus I2CHandler::handle_read(chAT::Server &srv, chAT::ATParser &p
         parser.args.size() != 2 &&
         parser.args.size() != 4)
     {
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     uint8_t bus_number = atoi(parser.args[0].c_str());
     if(bus_number < 0 || bus_number > I2C_COUNT){
-        srv.write_response_prompt();
-        srv.write_str("Invalid I2C bus number");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid I2C bus number");
     }
 
     switch (parser.args.size())
     {
     case 1: // GET REGISTER STATUS AS PERIPHERAL
+    {
         if(is_controller[bus_number]){
-            srv.write_response_prompt();
-            srv.write_str("Selected bus number should be configured as peripheral");
-            srv.write_line_end();
-            return chAT::CommandStatus::ERROR;
+            return write_error_message(srv, "Selected bus number should be configured as peripheral");
         }
         if(i2c_read(bus_number, 0, 0, data, REGISTER_COUNT, false) != NO_ERROR){
-            srv.write_response_prompt();
-            srv.write_str("Error reading I2C");
-            srv.write_line_end();
-            return chAT::CommandStatus::ERROR;
+            return write_error_message(srv, "Error reading I2C");
         }
-        srv.write_response_prompt();
-        srv.write_str("I2C read result from device, data: ");
+        String message;
         for (int i = 0; i < data_size; i++){
-            srv.write_str(String(data[i], HEX).c_str());
+            message += String(data[i], HEX)+ " ";
         }
-        srv.write_line_end();
         free(data);
-        return chAT::CommandStatus::OK;
+        return write_ok_message(srv, message.c_str());
+    }
     case 2: // SCAN
     {
         if(parser.args[1] != "SCAN"){
-            srv.write_response_prompt();
-            srv.write_str("Invalid argument");
-            srv.write_line_end();
-            return chAT::CommandStatus::ERROR;
+            return write_error_message(srv, "Invalid argument");
         }
-        uint8_t scan_res[116] = {0};
+        uint8_t scan_res[119] = {0};
         if(i2c_scan(bus_number, scan_res) != NO_ERROR){
-            srv.write_response_prompt();
-            srv.write_str("Error scanning I2C");
-            srv.write_line_end();
-            return chAT::CommandStatus::ERROR;
+            return write_error_message(srv, "Error scanning I2C");
         }
-        srv.write_response_prompt();
-        srv.write_str("I2C scan result: ");
-        for (int i = 0; i < 116; i++){
-            if(scan_res[i] == 1){
-                srv.write_str(String(i+3, HEX).c_str());
             }
         }
-        srv.write_line_end();
-        return chAT::CommandStatus::OK;
+        return write_ok_message(srv, message.c_str());
     }
     case 4: // READ AS CONTROLLER
+    {
         uint8_t address = (uint8_t)strtol(parser.args[1].c_str(), NULL, 16);
         uint8_t reg_addr = 0;
         bool has_reg_addr = (parser.args[2] != "");
         if (address < 0 || address > 127){
-            srv.write_response_prompt();
-            srv.write_str("Invalid I2C address");
-            srv.write_line_end();
-            return chAT::CommandStatus::ERROR;
+            return write_error_message(srv, "Invalid I2C address");
         }
         if(has_reg_addr){
             reg_addr = (uint8_t)strtol(parser.args[2].c_str(), NULL, 16);
@@ -97,62 +71,43 @@ chAT::CommandStatus I2CHandler::handle_read(chAT::Server &srv, chAT::ATParser &p
         data_size = parser.args[3] != "" ? atoi(parser.args[3].c_str()) : 1;
         data = (uint8_t *)malloc(data_size);
         if(is_controller[bus_number] == false){
-            srv.write_response_prompt();
-            srv.write_str("Selected bus number should be configured as controller");
-            srv.write_line_end();
-            return chAT::CommandStatus::ERROR;
+            return write_error_message(srv, "Selected bus number should be configured as controller");
         }
         if(i2c_read(bus_number, address, reg_addr, data, data_size, has_reg_addr) != NO_ERROR){
-            srv.write_response_prompt();
-            srv.write_str("Error reading I2C");
-            srv.write_line_end();
-            return chAT::CommandStatus::ERROR;
+            return write_error_message(srv, "Error reading I2C");
         }
         String message ="I2C read result from device "+String(address, HEX);
         if(has_reg_addr){
             message += ", register: "+String(reg_addr, HEX);
         }
         message += ", data: ";
-        srv.write_response_prompt();
-        srv.write_str(message.c_str());
         for (int i = 0; i < data_size; i++){
-            srv.write_str((String(data[i], HEX)+"-").c_str());
+            message += String(data[i], HEX)+ " ";
         }
-        srv.write_line_end();
-        free(data);
-        return chAT::CommandStatus::OK;
+
+        return write_ok_message(srv, message.c_str());
+    }
     }
 }
 
 chAT::CommandStatus I2CHandler::handle_write(chAT::Server &srv, chAT::ATParser &parser)
 {
     if (parser.args.size() != 4) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     uint8_t bus_number = atoi(parser.args[0].c_str());
     if(bus_number < 0 || bus_number > I2C_COUNT){
-        srv.write_response_prompt();
-        srv.write_str("Invalid I2C bus number");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid I2C bus number");
     }
     if(is_controller[bus_number] == false){
-        srv.write_response_prompt();
-        srv.write_str("Selected bus number should be configured as controller");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Selected bus number should be configured as controller");
     }
 
     uint8_t address = (uint8_t)strtol(parser.args[1].c_str(), NULL, 16);
     if (address < 0 || address > 127){
+        return write_error_message(srv, "Invalid I2C address");
         srv.write_response_prompt();
-        srv.write_str("Invalid I2C address");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
     }
 
     uint8_t data = (uint8_t)strtol(parser.args[2].c_str(), NULL, 16);
@@ -164,37 +119,25 @@ chAT::CommandStatus I2CHandler::handle_write(chAT::Server &srv, chAT::ATParser &
     }
 
     if(i2c_write(bus_number, address, reg_addr, &data, data_size, has_reg_addr) != NO_ERROR){
-        srv.write_response_prompt();
-        srv.write_str("Error writing I2C");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error writing I2C");
     }
 
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, "");
 }
 
 chAT::CommandStatus I2CHandler::handle_cfg_read(chAT::Server &srv, chAT::ATParser &parser)
 {
     if (parser.args.size() != 1) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     uint8_t bus_number = atoi(parser.args[0].c_str());
     if(bus_number < 0 || bus_number > I2C_COUNT){
-        srv.write_response_prompt();
-        srv.write_str("Invalid I2C bus number");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid I2C bus number");
     }
 
     if(is_confgured[bus_number] == false){
-        srv.write_response_prompt();
-        srv.write_str(("I2C bus "+String(bus_number)+" not configured").c_str());
-        srv.write_line_end();
-        return chAT::CommandStatus::OK;
+        return write_error_message(srv, ("I2C bus "+String(bus_number)+" not configured").c_str());
     }
 
     String message = "I2C bus "+String(bus_number)+" configured as ";
@@ -204,67 +147,42 @@ chAT::CommandStatus I2CHandler::handle_cfg_read(chAT::Server &srv, chAT::ATParse
         message += "peripheral";
     }
 
-    srv.write_response_prompt();
-    srv.write_str(message.c_str());
-    srv.write_line_end();
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, message.c_str());
 }
 
 chAT::CommandStatus I2CHandler::handle_cfg_write(chAT::Server &srv, chAT::ATParser &parser)
 {
     if (parser.args.size() != 1 && parser.args.size() != 3) {
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     uint8_t bus_number = atoi(parser.args[0].c_str());
     if(bus_number < 0 || bus_number > I2C_COUNT){
-        srv.write_response_prompt();
-        srv.write_str("Invalid I2C bus number");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid I2C bus number");
     }
 
     if(parser.args.size() == 1) //CLEAR CONFIGURATION
     {
         if(unset_configuration(bus_number) != NO_ERROR){
-            srv.write_response_prompt();
-            srv.write_str("Error clearing I2C bus configuration");
-            srv.write_line_end();
-            return chAT::CommandStatus::ERROR;
+            return write_error_message(srv, "Error clearing I2C bus configuration");
         }
-
-        srv.write_response_prompt();
-        srv.write_str(("I2C bus "+String(bus_number)+" configuration cleared").c_str());
-        srv.write_line_end();
-        return chAT::CommandStatus::OK;
+        return write_ok_message(srv, ("I2C bus "+String(bus_number)+" configuration cleared").c_str());
     }
 
     uint8_t address = 0;
     uint32_t bus_speed = atoi(parser.args[1].c_str());
-    bool is_controller = parser.args[2].c_str() == "" ? true : false;
+    bool is_controller = parser.args[2].c_str() == "" ? false : true;
     if(is_controller == false){
         address = (uint8_t)strtol(parser.args[2].c_str(), NULL, 16);
         if (address < 0 || address > 127){
-            srv.write_response_prompt();
-            srv.write_str("Invalid I2C address");
-            srv.write_line_end();
-            return chAT::CommandStatus::ERROR;
+            return write_error_message(srv, "Invalid I2C address");
         }
     }
 
-    if(set_configuration(bus_number, address, bus_speed, is_controller) != NO_ERROR){
-        srv.write_response_prompt();
-        srv.write_str("Error configuring I2C bus");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+    if(set_configuration(bus_number, address, bus_speed*1000, is_controller) != NO_ERROR){
+        return write_error_message(srv, "Error configuring I2C bus");
     }
-    srv.write_response_prompt();
-    srv.write_str(("I2C bus "+String(bus_number)+" configured").c_str());
-    srv.write_line_end();
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, ("I2C bus "+String(bus_number)+" configured").c_str());
 
 }
 
@@ -367,7 +285,7 @@ TesterError I2CHandler::i2c_scan(uint8_t i2c, uint8_t *addresses) {
         curr_i2c->beginTransmission(i);
         if (curr_i2c->endTransmission() == 0)
         {
-            addresses[i-3] = 1;
+            addresses[i] = 1;
             return NO_ERROR;
         }
     }
@@ -392,6 +310,8 @@ TesterError I2CHandler::set_configuration(uint8_t i2c, uint8_t address, uint32_t
         this->is_controller[i2c] = true;
     }else{
         curr_i2c->begin(address);
+        Serial.println("I2C address: "+String(address, HEX));
+        this->is_controller[i2c] = false;
         switch (i2c)
         {
         case 0:

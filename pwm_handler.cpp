@@ -9,56 +9,35 @@
 chAT::CommandStatus PwmHandler::handle_read(chAT::Server &srv, chAT::ATParser &parser)
 {
     if(parser.args.size() != 1){
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     int adcChannel = atoi(parser.args[0].c_str());
     if(adcChannel < 0 || adcChannel > MAX_ADC_NUMBER){
-        srv.write_response_prompt();
-        srv.write_str("Invalid ADC channel");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid ADC channel");
     }
     int pulseLenght = 0;
     if(read_pwm_in(adcChannel, &pulseLenght) != NO_ERROR){
-        srv.write_response_prompt();
-        srv.write_str("Error reading ADC");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error reading ADC");
     }
 
-    srv.write_response_prompt();
-    srv.write_str(String(pulseLenght).c_str());
-    srv.write_line_end();
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, String(pulseLenght).c_str());
 }
 
 chAT::CommandStatus PwmHandler::handle_write(chAT::Server &srv, chAT::ATParser &parser)
 {
     if(parser.args.size() != 2){
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     int pwmChannel = atoi(parser.args[0].c_str());
     int dutyCycle = atoi(parser.args[1].c_str());
 
     if(set_pwm_out(pwmChannel, dutyCycle) != NO_ERROR){
-        srv.write_response_prompt();
-        srv.write_str("Error writing PWM");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error writing PWM");
     }
-
-    srv.write_response_prompt();
-    srv.write_str(("#"+String(pwmChannel)+" DutyCycle %:"+String(dutyCycle)).c_str());
-    srv.write_line_end();
-    return chAT::CommandStatus::OK;
+    
+    return write_ok_message(srv, ("#"+String(pwmChannel)+" DutyCycle %:"+String(dutyCycle)).c_str());
 }
 
 TesterError PwmHandler::read_pwm_in(int adcChannel, int *output) {

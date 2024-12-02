@@ -7,25 +7,16 @@
 chAT::CommandStatus DacHandler::handle_write(chAT::Server &srv, chAT::ATParser &parser)
 {
     if (parser.args.size() != 1){
-        srv.write_response_prompt();
-        srv.write_str("Invalid number of arguments");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Invalid number of arguments");
     }
 
     float voltage = atof(parser.args[0].c_str());
 
     if(set_output_voltage(voltage) != NO_ERROR){
-        srv.write_response_prompt();
-        srv.write_str("Error writing DAC");
-        srv.write_line_end();
-        return chAT::CommandStatus::ERROR;
+        return write_error_message(srv, "Error writing DAC");
     }
 
-    srv.write_response_prompt();
-    srv.write_str(String(voltage).c_str());
-    srv.write_line_end();
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, String(voltage).c_str());
 }
 
 int DacHandler::from_voltage_to_dac_count(float voltage) {
