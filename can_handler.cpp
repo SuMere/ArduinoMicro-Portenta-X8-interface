@@ -6,12 +6,6 @@
 #define MESSAGE_COUNT 100
 #define BITRATE (CanBitRate::BR_1000k)
 
-CanHandler::CanHandler(CAtHandler *parent) 
-    : CmdHandler(parent) 
-{
-    parent->registerCommands("+CAN", this);
-}
-
 chAT::CommandStatus CanHandler::handle_read(chAT::Server &srv, chAT::ATParser &parser) {
     if (parser.args.size() != 0) {
         srv.write_response_prompt();

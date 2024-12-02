@@ -12,6 +12,6 @@ class PwmHandler : public CmdHandler {
         TesterError read_pwm_in(int adcChannel, int *output);
         TesterError set_pwm_out(int pwmChannel, int dutyCycle);
     public:
-        PwmHandler(CAtHandler *parent);
+        PwmHandler() : CmdHandler("+PWM") {}
         virtual ~PwmHandler() {}
 };

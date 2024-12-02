@@ -4,12 +4,6 @@
 
 #define GIGA_DAC A12
 
-DacHandler::DacHandler(CAtHandler *parent)
-    : CmdHandler(parent)
-{
-    parent->registerCommands("+DAC", this);
-}
-
 chAT::CommandStatus DacHandler::handle_write(chAT::Server &srv, chAT::ATParser &parser)
 {
     if (parser.args.size() != 1){

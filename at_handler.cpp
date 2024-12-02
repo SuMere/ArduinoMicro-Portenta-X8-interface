@@ -11,7 +11,7 @@ CAtHandler::CAtHandler()
 }
 
 /* -------------------------------------------------------------------------- */
-CAtHandler::begin(HardwareSerial *s)
+void CAtHandler::begin(HardwareSerial *s)
 /* -------------------------------------------------------------------------- */
 {
 	/* set up serial */

@@ -4,12 +4,6 @@
 
 uint8_t I2CHandler::data_register[I2C_COUNT][REGISTER_COUNT] = {{0}};
 
-I2CHandler::I2CHandler(CAtHandler *parent)
-    : CmdHandler(parent) 
-{
-    parent->registerCommands("+I2C", this);
-}
-
 chAT::CommandStatus I2CHandler::handle_read(chAT::Server &srv, chAT::ATParser &parser)
 {
     uint8_t *data = NULL;

@@ -12,6 +12,6 @@ class DacHandler : public CmdHandler{
         int from_voltage_to_dac_count(float voltage);
 
     public:
-        DacHandler(CAtHandler *parent);
+        DacHandler() : CmdHandler("+DAC") {}
         virtual ~DacHandler() {}
 };
