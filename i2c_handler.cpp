@@ -53,7 +53,29 @@ chAT::CommandStatus I2CHandler::handle_read(chAT::Server &srv, chAT::ATParser &p
         if(i2c_scan(bus_number, scan_res) != NO_ERROR){
             return write_error_message(srv, "Error scanning I2C");
         }
+        String message = "\n    ";
+        for (int i = 0; i < 16; i++) {
+            message += String(i, HEX) + "  ";
+        }
+        message += "\n";
+        for (int i=0; i < 8; i++) {
+            if (i == 0) {
+                message += " 0: ";
+            } else {
+                message += String(i * 16, HEX) + ": ";
             }
+            for (int j=0; j < 16; j++) {
+                if (i * 16 + j < 0x04 || i * 16 + j > 0x77) {
+                    message += "   ";
+                    continue;
+                }
+                if (scan_res[i * 16 + j] == 1) {
+                    message += String(i * 16 + j, HEX) + " ";
+                } else {
+                    message += "-- ";
+                }
+            }
+            message += "\n";
         }
         return write_ok_message(srv, message.c_str());
     }
