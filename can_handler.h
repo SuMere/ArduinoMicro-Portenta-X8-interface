@@ -21,6 +21,6 @@ class CanHandler : public CmdHandler {
         TesterError set_bitrate(CanBitRate bitrate);
 
     public:
-        CanHandler(CAtHandler *parent);
+        CanHandler() : CmdHandler("+CAN") {}
         virtual ~CanHandler() {}
 };

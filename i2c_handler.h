@@ -50,6 +50,6 @@ class I2CHandler : public CmdHandler {
         static void on_request_callback_2();
         //END OF CALLBACKS
     public:
-        I2CHandler(CAtHandler *parent);
+        I2CHandler() : CmdHandler("+I2C") {}
         virtual ~I2CHandler() {}
 };

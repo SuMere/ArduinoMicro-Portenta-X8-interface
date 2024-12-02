@@ -21,6 +21,6 @@ class UartHandler : public CmdHandler {
         bool is_configured(int uart_number);
 
     public:
-        UartHandler(CAtHandler *parent);
+        UartHandler() : CmdHandler("+UART") {}
         virtual ~UartHandler() {}
 };

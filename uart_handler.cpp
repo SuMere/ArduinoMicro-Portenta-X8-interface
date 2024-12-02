@@ -2,12 +2,6 @@
 
 #include "at_handler.h"
 
-UartHandler::UartHandler(CAtHandler *parent) 
-    : CmdHandler(parent) 
-{
-    parent->registerCommands("+UART", this);
-}
-
 chAT::CommandStatus UartHandler::handle_read(chAT::Server &srv, chAT::ATParser &parser)
 {
     if(parser.args.size() != 1) {

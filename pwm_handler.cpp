@@ -6,12 +6,6 @@
 #define PWM_SAMPLES 5
 #define PWM_SAMPLE_TIMEOUT_US 1000000
 
-PwmHandler::PwmHandler(CAtHandler *parent)
-    : CmdHandler(parent) 
-{
-    parent->registerCommands("+PWM", this);
-}
-
 chAT::CommandStatus PwmHandler::handle_read(chAT::Server &srv, chAT::ATParser &parser)
 {
     if(parser.args.size() != 1){
