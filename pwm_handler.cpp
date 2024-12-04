@@ -17,7 +17,7 @@ chAT::CommandStatus PwmHandler::handle_read(chAT::Server &srv, chAT::ATParser &p
         return write_error_message(srv, "Invalid ADC channel");
     }
     int pulseLenght = 0;
-    if(read_pwm_in(adcChannel, &pulseLenght) != NO_ERROR){
+    if(read_pwm_in(adcChannel, &pulseLenght) != 0){
         return write_error_message(srv, "Error reading ADC");
     }
 
@@ -33,18 +33,17 @@ chAT::CommandStatus PwmHandler::handle_write(chAT::Server &srv, chAT::ATParser &
     int pwmChannel = atoi(parser.args[0].c_str());
     int dutyCycle = atoi(parser.args[1].c_str());
 
-    if(set_pwm_out(pwmChannel, dutyCycle) != NO_ERROR){
+    if(set_pwm_out(pwmChannel, dutyCycle) != 0){
         return write_error_message(srv, "Error writing PWM");
     }
     
     return write_ok_message(srv, ("#"+String(pwmChannel)+" DutyCycle %:"+String(dutyCycle)).c_str());
 }
 
-TesterError PwmHandler::read_pwm_in(int adcChannel, int *output) {
-    TesterError opStatus = NO_ERROR;
+int PwmHandler::read_pwm_in(int adcChannel, int *output) {
     float pulseLenght = 0;
     if(adcChannel < 0 || adcChannel > 7){
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
 
     int adc_channel = A0+adcChannel;
@@ -56,19 +55,18 @@ TesterError PwmHandler::read_pwm_in(int adcChannel, int *output) {
 
     *output = int(pulseLenght/PWM_SAMPLES);
 
-    return NO_ERROR;
+    return 0;
 }
 
 //TODO IMPROVE THIS STARTINH FROM HERE [https://github.com/arduino/ArduinoCore-mbed/blob/main/cores/arduino/wiring_analog.cpp#L45-L99]
 
-TesterError PwmHandler::set_pwm_out(int pwmChannel, int dutyCycle_percentage) {
-    TesterError opStatus = NO_ERROR;
+int PwmHandler::set_pwm_out(int pwmChannel, int dutyCycle_percentage) {
     if(pwmChannel < 2 ||
        pwmChannel > 13 ||
        dutyCycle_percentage < 0 ||
        dutyCycle_percentage > 100)
     {
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
 
     int dutyCycle = map(dutyCycle_percentage, 0, 100, 0, 255);
@@ -76,5 +74,5 @@ TesterError PwmHandler::set_pwm_out(int pwmChannel, int dutyCycle_percentage) {
     Serial.println(dutyCycle);
     analogWrite(pwmChannel, dutyCycle);
 
-    return NO_ERROR;
+    return 0;
 }

@@ -44,7 +44,7 @@ chAT::CommandStatus I2CHandler::handle_read(chAT::Server &srv, chAT::ATParser &p
             return write_error_message(srv, "Invalid argument");
         }
         uint8_t scan_res[119] = {0};
-        if(i2c_scan(bus_number, scan_res) != NO_ERROR){
+        if(i2c_scan(bus_number, scan_res) != 0){
             return write_error_message(srv, "Error scanning I2C");
         }
         String message = "\n    ";
@@ -89,7 +89,7 @@ chAT::CommandStatus I2CHandler::handle_read(chAT::Server &srv, chAT::ATParser &p
         if(is_controller[bus_number] == false){
             return write_error_message(srv, "Selected bus number should be configured as controller");
         }
-        if(i2c_read(bus_number, address, reg_addr, data, data_size, has_reg_addr) != NO_ERROR){
+        if(i2c_read(bus_number, address, reg_addr, data, data_size, has_reg_addr) != 0){
             return write_error_message(srv, "Error reading I2C");
         }
         String message ="I2C read result from device "+String(address, HEX);
@@ -100,7 +100,6 @@ chAT::CommandStatus I2CHandler::handle_read(chAT::Server &srv, chAT::ATParser &p
         for (int i = 0; i < data_size; i++){
             message += String(data[i], HEX)+ " ";
         }
-
         return write_ok_message(srv, message.c_str());
     }
     }
@@ -134,7 +133,7 @@ chAT::CommandStatus I2CHandler::handle_write(chAT::Server &srv, chAT::ATParser &
         reg_addr = (uint8_t)strtol(parser.args[3].c_str(), NULL, 16);
     }
 
-    if(i2c_write(bus_number, address, reg_addr, &data, data_size, has_reg_addr) != NO_ERROR){
+    if(i2c_write(bus_number, address, reg_addr, &data, data_size, has_reg_addr) != 0){
         return write_error_message(srv, "Error writing I2C");
     }
 
@@ -179,7 +178,7 @@ chAT::CommandStatus I2CHandler::handle_cfg_write(chAT::Server &srv, chAT::ATPars
 
     if(parser.args.size() == 1) //CLEAR CONFIGURATION
     {
-        if(unset_configuration(bus_number) != NO_ERROR){
+        if(unset_configuration(bus_number) != 0){
             return write_error_message(srv, "Error clearing I2C bus configuration");
         }
         return write_ok_message(srv, ("I2C bus "+String(bus_number)+" configuration cleared").c_str());
@@ -195,69 +194,65 @@ chAT::CommandStatus I2CHandler::handle_cfg_write(chAT::Server &srv, chAT::ATPars
         }
     }
 
-    if(set_configuration(bus_number, address, bus_speed*1000, is_controller) != NO_ERROR){
+    if(set_configuration(bus_number, address, bus_speed*1000, is_controller) != 0){
         return write_error_message(srv, "Error configuring I2C bus");
     }
     return write_ok_message(srv, ("I2C bus "+String(bus_number)+" configured").c_str());
 
 }
 
-TesterError I2CHandler::i2c_read(uint8_t i2c, uint8_t address, uint8_t register_address, uint8_t *data, size_t size, bool has_reg_addr) {
-    TesterError opStatus = NO_ERROR;
+int I2CHandler::i2c_read(uint8_t i2c, uint8_t address, uint8_t register_address, uint8_t *data, size_t size, bool has_reg_addr) {
     TwoWire *curr_i2c = NULL;
 
     if(i2c >= I2C_COUNT) {
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
 
     if(is_confgured[i2c] == false) {
-        return ERROR_INVALID_STATE;
+        return EPERM;
     }
 
     curr_i2c = i2c_array[i2c];
 
     if(!curr_i2c) {
-        return ERROR_INIT_FAILED;
+        return ENODEV;
     }
 
-    if(is_controller[i2c]){
-        curr_i2c->beginTransmission(address);
-        if(register_address != 0) {
-            curr_i2c->requestFrom(address, size);
-            if (has_reg_addr) {
-                curr_i2c->write(register_address);
-            } 
-        }
-
-        if(curr_i2c->endTransmission(true) == 0) {
-            opStatus = handle_controller_read(curr_i2c, data, size);
-        }else{
-            opStatus = ERROR_INVALID_RESPONSE;
-        }
-    }else{
-        opStatus = handle_peripheral_read(i2c, data);
+    if(is_controller[i2c] == false){
+        return EPERM;
     }
 
-    return opStatus;
+    curr_i2c->beginTransmission(address);
+    if(register_address != 0) {
+        curr_i2c->requestFrom(address, size);
+        if (has_reg_addr) {
+            curr_i2c->write(register_address);
+        } 
+    }
+    if(curr_i2c->endTransmission(true) != 0) {
+        return EIO;
+    }
+
+    return handle_controller_read(curr_i2c, data, size);
 }
 
-TesterError I2CHandler::i2c_write(uint8_t i2c, uint8_t address, uint8_t register_address, uint8_t *data, size_t size, bool has_reg_addr) {
+int I2CHandler::i2c_write(uint8_t i2c, uint8_t address, uint8_t register_address, uint8_t *data, size_t size, bool has_reg_addr) {
     TwoWire *curr_i2c = NULL;
     
     if (i2c >= I2C_COUNT)
     {
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
 
     if (is_confgured[i2c] == false || is_controller[i2c] == false)
     {
-        return ERROR_INVALID_STATE;
+        return EPERM;
     }
 
     curr_i2c = i2c_array[i2c];
 
     if(!curr_i2c) {
-        return ERROR_INIT_FAILED;
+        return ENODEV;
     }
 
     curr_i2c->beginTransmission(address);
@@ -269,28 +264,28 @@ TesterError I2CHandler::i2c_write(uint8_t i2c, uint8_t address, uint8_t register
         curr_i2c->write(data[i]);
     }
     if(curr_i2c->endTransmission() != 0) {
-        return ERROR_INVALID_RESPONSE;
+        return EIO;
     }
 
-    return NO_ERROR;
+    return 0;
 }
 
-TesterError I2CHandler::i2c_scan(uint8_t i2c, uint8_t *addresses) {
+int I2CHandler::i2c_scan(uint8_t i2c, uint8_t *addresses) {
     TwoWire *curr_i2c = NULL;
 
     if (i2c >= I2C_COUNT)
     {
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
 
     if(is_confgured[i2c] == false || is_controller[i2c] == false) {
-        return ERROR_INVALID_STATE;
+        return EPERM;
     }
 
     curr_i2c = i2c_array[i2c];
 
     if(!curr_i2c) {
-        return ERROR_INIT_FAILED;
+        return ENODEV;
     }
 
     for (uint8_t i = 3; i < 119; i++)
@@ -299,23 +294,23 @@ TesterError I2CHandler::i2c_scan(uint8_t i2c, uint8_t *addresses) {
         if (curr_i2c->endTransmission() == 0)
         {
             addresses[i] = 1;
-            return NO_ERROR;
         }
     }
-    return NO_ERROR;
+
+    return 0;
 }
 
-TesterError I2CHandler::set_configuration(uint8_t i2c, uint8_t address, uint32_t frequency, bool is_controller) {
+int I2CHandler::set_configuration(uint8_t i2c, uint8_t address, uint32_t frequency, bool is_controller) {
     TwoWire *curr_i2c = NULL;
 
     if(i2c >= I2C_COUNT) {
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
 
     curr_i2c = i2c_array[i2c];
 
     if(!curr_i2c) {
-        return ERROR_INIT_FAILED;
+        return ENODEV;
     }
 
     if(is_controller){
@@ -345,33 +340,33 @@ TesterError I2CHandler::set_configuration(uint8_t i2c, uint8_t address, uint32_t
     is_confgured[i2c] = true;
 
     curr_i2c->setClock(frequency);
-    return NO_ERROR;
+    return 0;
 }
 
-TesterError I2CHandler::unset_configuration(uint8_t i2c) {
+int I2CHandler::unset_configuration(uint8_t i2c) {
     TwoWire *curr_i2c = NULL;
     if(i2c >= I2C_COUNT) {
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
 
     curr_i2c = i2c_array[i2c];
 
     if(!curr_i2c) {
-        return ERROR_INIT_FAILED;
+        return ENODEV;
     }
 
     curr_i2c->end();
     is_confgured[i2c] = false;
     is_controller[i2c] = false;
 
-    return NO_ERROR;
+    return 0;
 }
 
 bool I2CHandler::is_configured(uint8_t i2c) {
     return is_confgured[i2c];
 }
 
-TesterError I2CHandler::handle_controller_read(TwoWire *i2c, uint8_t *data, size_t size) {
+int I2CHandler::handle_controller_read(TwoWire *i2c, uint8_t *data, size_t size) {
     if(i2c->available() > 0) {
         for (int i = 0; i < size; i++)
         {
@@ -379,7 +374,6 @@ TesterError I2CHandler::handle_controller_read(TwoWire *i2c, uint8_t *data, size
         }
     }
 
-    return NO_ERROR;
 }
 
 TesterError I2CHandler::handle_peripheral_read(uint8_t i2c, uint8_t *data) {
@@ -394,8 +388,7 @@ TesterError I2CHandler::handle_peripheral_read(uint8_t i2c, uint8_t *data) {
     }
 
     memcpy(data, data_register[i2c], sizeof(uint8_t) * REGISTER_COUNT);
-
-    return NO_ERROR;
+    return 0;
 }
 
 // CALLBACKS

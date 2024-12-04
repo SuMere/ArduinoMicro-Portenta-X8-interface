@@ -1,7 +1,5 @@
 #pragma once
 
-#include "common.h"
-
 #include "cmd_handler.h"
 
 class GpioHandler : public CmdHandler {
@@ -9,8 +7,8 @@ class GpioHandler : public CmdHandler {
         virtual chAT::CommandStatus handle_read(chAT::Server&, chAT::ATParser&);
         virtual chAT::CommandStatus handle_write(chAT::Server&, chAT::ATParser&);
 
-        TesterError get_gpio_status(int gpio, int *value);
-        TesterError set_gpio_status(int gpio, int value);
+        int get_gpio_status(int gpio, int *value);
+        int set_gpio_status(int gpio, int value);
 
     public:
         GpioHandler() : CmdHandler("+GPIO") {}

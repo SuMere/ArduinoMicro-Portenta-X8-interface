@@ -17,9 +17,11 @@ chAT::CommandStatus UartHandler::handle_read(chAT::Server &srv, chAT::ATParser &
     if(is_configured(uart_number) == false) {
         return write_error_message(srv, "Error UART not configured");
     }
-    if(receive_message(uart_number, &message) != NO_ERROR) {
+    if(receive_message(uart_number, &message) != 0) {
         return write_error_message(srv, "Error receiving message");
     }
+
+    message = "Received message: \"" + message + "\"";
 
     return write_ok_message(srv, message.c_str());
 }
@@ -40,7 +42,7 @@ chAT::CommandStatus UartHandler::handle_write(chAT::Server &srv, chAT::ATParser 
         return write_error_message(srv, "Error UART not configured");
     }
 
-    if(send_message(uart_number, message) != NO_ERROR) {
+    if(send_message(uart_number, message) != 0) {
         return write_error_message(srv, "Error sending message");
     }
 
@@ -81,81 +83,80 @@ chAT::CommandStatus UartHandler::handle_cfg_write(chAT::Server &srv, chAT::ATPar
     String parity = parser.args[3].c_str();
     int baud_rate = atoi(parser.args[4].c_str());
 
-    if(set_configuration(uart_number, data_bits, stop_bits, parity, baud_rate) != NO_ERROR) {
+    if(set_configuration(uart_number, data_bits, stop_bits, parity, baud_rate) != 0) {
         return write_error_message(srv, "Error configuring UART");
     }
 
     return write_ok_message(srv, "");
 }
 
-TesterError UartHandler::send_message(int uart_number, String message) {
-    String final_message = message + "\n\r";
+int UartHandler::send_message(int uart_number, String message) {
     switch (uart_number)
     {
     case 0:
-        if(is_confgured[uart_number]){
-            return ERROR_INVALID_STATE;
+        if(is_confgured[uart_number] == false){
+            return EPERM;
         }
-        Serial1.print(final_message);
+        Serial1.print(message);
         break;
     case 1:
-        if(is_confgured[uart_number]){
-            return ERROR_INVALID_STATE;
+        if(is_confgured[uart_number] == false){
+            return EPERM;
         }
-        Serial2.print(final_message);
+        Serial2.print(message);
         break;
     case 2:
-        if(is_confgured[uart_number]){
-            return ERROR_INVALID_STATE;
+        if(is_confgured[uart_number] == false){
+            return EPERM;
         }
-        Serial3.print(final_message);
+        Serial3.print(message);
         break;
     case 3:
-        if(is_confgured[uart_number]){
-            return ERROR_INVALID_STATE;
+        if(is_confgured[uart_number] == false){
+            return EPERM;
         }
-        Serial4.print(final_message);
+        Serial4.print(message);
         break;
     default:
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
-    return NO_ERROR;
+    return 0;
 }
 
-TesterError UartHandler::receive_message(int uart_number, String *message) {
+int UartHandler::receive_message(int uart_number, String *message) {
     switch (uart_number)
     {
     case 0:
-        if(this->is_configured(uart_number) == false){
-            return ERROR_INVALID_STATE;
+        if(is_confgured[uart_number] == false){
+            return EPERM;
         }
         *message = Serial1.readString();
         break;
     case 1:
-        if(this->is_configured(uart_number) == false){
-            return ERROR_INVALID_STATE;
+        if(is_confgured[uart_number] == false){
+            return EPERM;
         }
         *message = Serial2.readString();
         break;
     case 2:
-        if(this->is_configured(uart_number) == false){
-            return ERROR_INVALID_STATE;
+        if(is_confgured[uart_number] == false){
+            return EPERM;
         }
         *message = Serial3.readString();
         break;
     case 3:
-        if(this->is_configured(uart_number) == false){
-            return ERROR_INVALID_STATE;
+        if(is_confgured[uart_number] == false){
+            return EPERM;
         }
         *message = Serial4.readString();
         break;
     default:
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
-    return NO_ERROR;
+    return 0;
 }
 
-TesterError UartHandler::set_configuration(int uart_number, int data_bits, int stop_bits, String parity, int baud_rate) {
+int UartHandler::set_configuration(int uart_number, int data_bits, int stop_bits, String parity, int baud_rate) {
     uint16_t config = 0;
 
     switch (data_bits)
@@ -173,7 +174,7 @@ TesterError UartHandler::set_configuration(int uart_number, int data_bits, int s
         config |= SERIAL_DATA_8;
         break;
     default:
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
 
     switch (stop_bits)
@@ -185,7 +186,7 @@ TesterError UartHandler::set_configuration(int uart_number, int data_bits, int s
         config |= SERIAL_STOP_BIT_2;
         break;
     default:
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
 
     if (parity == "N")
@@ -202,7 +203,7 @@ TesterError UartHandler::set_configuration(int uart_number, int data_bits, int s
     }
     else
     {
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
 
     switch (uart_number)
@@ -224,12 +225,12 @@ TesterError UartHandler::set_configuration(int uart_number, int data_bits, int s
         Serial4.setTimeout(5000);
         break;
     default:
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
 
     is_confgured[uart_number] = true;
 
-    return NO_ERROR;
+    return 0;
 }
 
 bool UartHandler::is_configured(int uart_number) {

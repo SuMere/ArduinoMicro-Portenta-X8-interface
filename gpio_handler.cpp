@@ -17,7 +17,7 @@ chAT::CommandStatus GpioHandler::handle_read(chAT::Server &srv, chAT::ATParser &
 
     int gpioStatus = -1;
 
-    if(get_gpio_status(interfaceGpio, &gpioStatus) != NO_ERROR){
+    if(get_gpio_status(interfaceGpio, &gpioStatus) != 0){
         return write_error_message(srv, "Error reading GPIO");
     }
     
@@ -36,27 +36,23 @@ chAT::CommandStatus GpioHandler::handle_write(chAT::Server &srv, chAT::ATParser 
     }
     int value = atoi(parser.args[1].c_str());
 
-    if (set_gpio_status(interfaceGpio, value) != NO_ERROR){
+    if (set_gpio_status(interfaceGpio, value) != 0){
         return write_error_message(srv, "Error writing GPIO");
     }
 
     return write_ok_message(srv, ("#"+String(interfaceGpio)+" Value:"+String(value)).c_str());
 }
 
-TesterError GpioHandler::get_gpio_status(int gpio, int *value)
+int GpioHandler::get_gpio_status(int gpio, int *value)
 {
-    TesterError opStatus = NO_ERROR;
-
     pinMode(gpio, INPUT);
     *value = digitalRead(gpio);
 
-    return opStatus;
+    return 0;
 }
 
-TesterError GpioHandler::set_gpio_status(int gpio, int value)
+int GpioHandler::set_gpio_status(int gpio, int value)
 {
-    TesterError opStatus = NO_ERROR;
-
     if (false
 #ifdef DAC
 	    || gpio == DAC
@@ -73,11 +69,11 @@ TesterError GpioHandler::set_gpio_status(int gpio, int value)
         else{
             analogWrite(gpio, 0);
         }
-        return opStatus;
+        return 0;
     }
 
     pinMode(gpio, OUTPUT);
     digitalWrite(gpio, value);
 
-    return opStatus;
+    return 0;
 }
