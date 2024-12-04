@@ -78,10 +78,10 @@ chAT::CommandStatus UartHandler::handle_cfg_write(chAT::Server &srv, chAT::ATPar
         return write_error_message(srv, "Invalid UART number");
     }
     
-    int data_bits = atoi(parser.args[1].c_str());
-    int stop_bits = atoi(parser.args[2].c_str());
+    int baud_rate = atoi(parser.args[1].c_str());
+    int data_bits = atoi(parser.args[2].c_str());
     String parity = parser.args[3].c_str();
-    int baud_rate = atoi(parser.args[4].c_str());
+    int stop_bits = atoi(parser.args[4].c_str());
 
     if(set_configuration(uart_number, data_bits, stop_bits, parity, baud_rate) != 0) {
         return write_error_message(srv, "Error configuring UART");
