@@ -34,14 +34,10 @@ chAT::CommandStatus I2CHandler::handle_read(chAT::Server &srv, chAT::ATParser &p
         if(is_controller[bus_number]){
             return write_error_message(srv, "Selected bus number should be configured as peripheral");
         }
-        if(i2c_read(bus_number, 0, 0, data, REGISTER_COUNT, false) != NO_ERROR){
-            return write_error_message(srv, "Error reading I2C");
-        }
         String message;
-        for (int i = 0; i < data_size; i++){
-            message += String(data[i], HEX)+ " ";
+        for (int i = 0; i < REGISTER_COUNT; i++){
+            message += "0x"+String(data_register[bus_number][i], HEX)+ " ";
         }
-        free(data);
         return write_ok_message(srv, message.c_str());
     }
     case 2: // SCAN
@@ -65,7 +61,7 @@ chAT::CommandStatus I2CHandler::handle_read(chAT::Server &srv, chAT::ATParser &p
                 message += String(i * 16, HEX) + ": ";
             }
             for (int j=0; j < 16; j++) {
-                if (i * 16 + j < 0x04 || i * 16 + j > 0x77) {
+                if (i * 16 + j < 0x08 || i * 16 + j > 0x77) {
                     message += "   ";
                     continue;
                 }
@@ -83,7 +79,7 @@ chAT::CommandStatus I2CHandler::handle_read(chAT::Server &srv, chAT::ATParser &p
     {
         uint8_t address = (uint8_t)strtol(parser.args[1].c_str(), NULL, 16);
         uint8_t reg_addr = 0;
-        bool has_reg_addr = (parser.args[2] != "");
+        bool has_reg_addr = (parser.args[2].length() != 0);
         if (address < 0 || address > 127){
             return write_error_message(srv, "Invalid I2C address");
         }
@@ -158,7 +154,7 @@ chAT::CommandStatus I2CHandler::handle_cfg_read(chAT::Server &srv, chAT::ATParse
     }
 
     if(is_confgured[bus_number] == false){
-        return write_error_message(srv, ("I2C bus "+String(bus_number)+" not configured").c_str());
+        return write_ok_message(srv, ("I2C bus "+String(bus_number)+" not configured").c_str());
     }
 
     String message = "I2C bus "+String(bus_number)+" configured as ";
@@ -192,7 +188,7 @@ chAT::CommandStatus I2CHandler::handle_cfg_write(chAT::Server &srv, chAT::ATPars
 
     uint8_t address = 0;
     uint32_t bus_speed = atoi(parser.args[1].c_str());
-    bool is_controller = parser.args[2].c_str() == "" ? false : true;
+    bool is_controller = parser.args[2].length() == 0 ? true : false;
     if(is_controller == false){
         address = (uint8_t)strtol(parser.args[2].c_str(), NULL, 16);
         if (address < 0 || address > 127){
@@ -294,7 +290,7 @@ int I2CHandler::i2c_scan(uint8_t i2c, uint8_t *addresses) {
         return ENODEV;
     }
 
-    for (uint8_t i = 3; i < 119; i++)
+    for (uint8_t i = 8; i < 119; i++)
     {
         curr_i2c->beginTransmission(i);
         if (curr_i2c->endTransmission() == 0)
@@ -321,10 +317,10 @@ int I2CHandler::set_configuration(uint8_t i2c, uint8_t address, uint32_t frequen
 
     if(is_controller){
         curr_i2c->begin();
+        curr_i2c->setClock(frequency);
         this->is_controller[i2c] = true;
     }else{
         curr_i2c->begin(address);
-        Serial.println("I2C address: "+String(address, HEX));
         this->is_controller[i2c] = false;
         switch (i2c)
         {
@@ -345,7 +341,6 @@ int I2CHandler::set_configuration(uint8_t i2c, uint8_t address, uint32_t frequen
 
     is_confgured[i2c] = true;
 
-    curr_i2c->setClock(frequency);
     return 0;
 }
 
@@ -380,26 +375,12 @@ int I2CHandler::handle_controller_read(TwoWire *i2c, uint8_t *data, size_t size)
         }
     }
 
-}
-
-TesterError I2CHandler::handle_peripheral_read(uint8_t i2c, uint8_t *data) {
-    if(i2c >= I2C_COUNT) {
-        return ERROR_INVALID_ARGUMENT;
-    }
-
-    data = (uint8_t*) malloc(sizeof(uint8_t) * REGISTER_COUNT);
-
-    if (data == NULL){
-        return ERROR_NO_MEM;
-    }
-
-    memcpy(data, data_register[i2c], sizeof(uint8_t) * REGISTER_COUNT);
     return 0;
 }
 
 // CALLBACKS
 void I2CHandler::on_receive_callback_0(int numBytes) {
-    if (numBytes > 2)
+    if (numBytes < 2)
     {
         return;
     }
@@ -413,7 +394,7 @@ void I2CHandler::on_receive_callback_0(int numBytes) {
 }
 
 void I2CHandler::on_receive_callback_1(int numBytes) {
-    if (numBytes > 2)
+    if (numBytes < 2)
     {
         return;
     }
@@ -427,7 +408,7 @@ void I2CHandler::on_receive_callback_1(int numBytes) {
 }
 
 void I2CHandler::on_receive_callback_2(int numBytes) {
-    if (numBytes > 2)
+    if (numBytes < 2)
     {
         return;
     }
@@ -441,14 +422,36 @@ void I2CHandler::on_receive_callback_2(int numBytes) {
 }
 
 void I2CHandler::on_request_callback_0() {
-    Wire.write(data_register[0], 2);
+    uint8_t register_index = Wire.read();
+    Serial.println(register_index);
+    if (register_index >= REGISTER_COUNT)
+    {
+        Serial.println("NOPE");
+        return;
+    }
+
+    Serial.println("Request received");
+
+    Wire.write(data_register[0][register_index]);
 }
 
 void I2CHandler::on_request_callback_1() {
-    Wire1.write(data_register[1], 2);
+    uint8_t register_index = Wire1.read();
+    if (register_index >= REGISTER_COUNT)
+    {
+        return;
+    }
+
+    Wire1.write(data_register[1][register_index]);
 }
 
 void I2CHandler::on_request_callback_2() {
-    Wire2.write(data_register[2], 2);
+    uint8_t register_index = Wire2.read();
+    if (register_index >= REGISTER_COUNT)
+    {
+        return;
+    }
+
+    Wire2.write(data_register[2][register_index]);
 }
 //END OF CALLBACKS
