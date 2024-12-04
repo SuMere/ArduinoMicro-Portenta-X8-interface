@@ -12,7 +12,7 @@ chAT::CommandStatus DacHandler::handle_write(chAT::Server &srv, chAT::ATParser &
 
     float voltage = atof(parser.args[0].c_str());
 
-    if(set_output_voltage(voltage) != NO_ERROR){
+    if(set_output_voltage(voltage) != 0){
         return write_error_message(srv, "Error writing DAC");
     }
 
@@ -24,14 +24,14 @@ int DacHandler::from_voltage_to_dac_count(float voltage) {
     return count;
 }
 
-TesterError DacHandler::set_output_voltage(float voltage) {
+int DacHandler::set_output_voltage(float voltage) {
     if (voltage < 0 || voltage > 3.3) {
-        return ERROR_INVALID_ARGUMENT;
+        return EINVAL;
     }
     
     int count = this->from_voltage_to_dac_count(voltage);
 
     pinMode(GIGA_DAC, OUTPUT);
     analogWrite(GIGA_DAC, count);
-    return NO_ERROR;
+    return 0;
 }

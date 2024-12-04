@@ -1,7 +1,5 @@
 #pragma once
 
-#include "common.h"
-
 #include "cmd_handler.h"
 #include <Arduino_CAN.h>
 
@@ -16,9 +14,9 @@ class CanHandler : public CmdHandler {
 
         static const uint32_t ID = 0x20;
 
-        TesterError send_frame(const uint8_t *frame, const uint8_t size);
-        TesterError receive_frame(String *frame, size_t *size);
-        TesterError set_bitrate(CanBitRate bitrate);
+        int send_frame(const uint8_t *frame, const uint8_t size);
+        int receive_frame(String *frame, size_t *size);
+        int set_bitrate(CanBitRate bitrate);
 
     public:
         CanHandler() : CmdHandler("+CAN") {}

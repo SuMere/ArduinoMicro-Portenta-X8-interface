@@ -1,7 +1,5 @@
 #pragma once
 
-#include "common.h"
-
 #include "Wire.h"
 #include "cmd_handler.h"
 
@@ -29,14 +27,14 @@ class I2CHandler : public CmdHandler {
         virtual chAT::CommandStatus handle_cfg_read(chAT::Server&, chAT::ATParser&);
         virtual chAT::CommandStatus handle_cfg_write(chAT::Server&, chAT::ATParser&);
 
-        TesterError i2c_read(uint8_t i2c, uint8_t address, uint8_t register_address, uint8_t *data, size_t size, bool has_reg_addr);
-        TesterError i2c_write(uint8_t i2c, uint8_t address, uint8_t register_address, uint8_t *data, size_t size, bool has_reg_addr);
-        TesterError i2c_scan(uint8_t i2c, uint8_t *address);
-        TesterError set_configuration(uint8_t i2c, uint8_t address, uint32_t frequency, bool controller);
-        TesterError unset_configuration(uint8_t i2c);
+        int i2c_read(uint8_t i2c, uint8_t address, uint8_t register_address, uint8_t *data, size_t size, bool has_reg_addr);
+        int i2c_write(uint8_t i2c, uint8_t address, uint8_t register_address, uint8_t *data, size_t size, bool has_reg_addr);
+        int i2c_scan(uint8_t i2c, uint8_t *address);
+        int set_configuration(uint8_t i2c, uint8_t address, uint32_t frequency, bool controller);
+        int unset_configuration(uint8_t i2c);
 
-        TesterError handle_controller_read(TwoWire *i2c, uint8_t *data, size_t size);
-        TesterError handle_peripheral_read(uint8_t i2c, uint8_t *data);
+        int handle_controller_read(TwoWire *i2c, uint8_t *data, size_t size);
+        int handle_peripheral_read(uint8_t i2c, uint8_t *data);
 
         bool is_configured(uint8_t i2c);
 
