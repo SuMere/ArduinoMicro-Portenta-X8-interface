@@ -14,7 +14,7 @@ chAT::CommandStatus UartHandler::handle_read(chAT::Server &srv, chAT::ATParser &
     }
 
     String message = "";
-    if(is_configured(uart_number) == false) {
+    if(is_configured[uart_number] == false) {
         return write_error_message(srv, "Error UART not configured");
     }
     if(receive_message(uart_number, &message) != 0) {
@@ -38,7 +38,7 @@ chAT::CommandStatus UartHandler::handle_write(chAT::Server &srv, chAT::ATParser 
         return write_error_message(srv, "Invalid UART number");
     }
 
-    if(is_configured(uart_number) == false) {
+    if(is_configured[uart_number] == false) {
         return write_error_message(srv, "Error UART not configured");
     }
 
@@ -60,7 +60,7 @@ chAT::CommandStatus UartHandler::handle_cfg_read(chAT::Server &srv, chAT::ATPars
         return write_error_message(srv, "Invalid UART number");
     }
 
-    if(is_configured(uart_number) == false) {
+    if(is_configured[uart_number] == false) {
         return write_error_message(srv, "UART not configured");
     }
 
@@ -94,25 +94,25 @@ int UartHandler::send_message(int uart_number, String message) {
     switch (uart_number)
     {
     case 0:
-        if(is_confgured[uart_number] == false){
+        if(is_configured[uart_number] == false){
             return EPERM;
         }
         Serial1.print(message);
         break;
     case 1:
-        if(is_confgured[uart_number] == false){
+        if(is_configured[uart_number] == false){
             return EPERM;
         }
         Serial2.print(message);
         break;
     case 2:
-        if(is_confgured[uart_number] == false){
+        if(is_configured[uart_number] == false){
             return EPERM;
         }
         Serial3.print(message);
         break;
     case 3:
-        if(is_confgured[uart_number] == false){
+        if(is_configured[uart_number] == false){
             return EPERM;
         }
         Serial4.print(message);
@@ -127,25 +127,25 @@ int UartHandler::receive_message(int uart_number, String *message) {
     switch (uart_number)
     {
     case 0:
-        if(is_confgured[uart_number] == false){
+        if(is_configured[uart_number] == false){
             return EPERM;
         }
         *message = Serial1.readString();
         break;
     case 1:
-        if(is_confgured[uart_number] == false){
+        if(is_configured[uart_number] == false){
             return EPERM;
         }
         *message = Serial2.readString();
         break;
     case 2:
-        if(is_confgured[uart_number] == false){
+        if(is_configured[uart_number] == false){
             return EPERM;
         }
         *message = Serial3.readString();
         break;
     case 3:
-        if(is_confgured[uart_number] == false){
+        if(is_configured[uart_number] == false){
             return EPERM;
         }
         *message = Serial4.readString();
@@ -228,15 +228,7 @@ int UartHandler::set_configuration(int uart_number, int data_bits, int stop_bits
         return EINVAL;
     }
 
-    is_confgured[uart_number] = true;
+    is_configured[uart_number] = true;
 
     return 0;
-}
-
-bool UartHandler::is_configured(int uart_number) {
-    if (uart_number < 0 || uart_number >= UART_COUNT) {
-        return false;
-    }
-
-    return is_confgured[uart_number];
 }

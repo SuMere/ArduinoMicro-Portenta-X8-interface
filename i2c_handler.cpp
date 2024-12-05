@@ -54,25 +54,24 @@ chAT::CommandStatus I2CHandler::handle_read(chAT::Server &srv, chAT::ATParser &p
             message += String(i, HEX) + "  ";
         }
         message += "\n";
-        for (int i=0; i < 8; i++) {
-            if (i == 0) {
-                message += " 0: ";
-            } else {
-                message += String(i * 16, HEX) + ": ";
-            }
-            for (int j=0; j < 16; j++) {
-                if (i * 16 + j < 0x08 || i * 16 + j > 0x77) {
-                    message += "   ";
-                    continue;
-                }
-                if (scan_res[i * 16 + j] == 1) {
-                    message += String(i * 16 + j, HEX) + " ";
-                } else {
-                    message += "-- ";
-                }
-            }
-            message += "\n";
-        }
+
+	for (int a=0; a<0x80; ++a) {
+		if (i == 0) {
+			message += "00: ";
+		} else if (!(i % 16)) {
+			message += "\n" + String(a, HEX) + ": ";
+		}
+		if (a < 0x08 || a > 0x77) {
+			message += "   ";
+		} else if (scan_res[a] == 1) {
+			if (a < 16) message += "0";
+			message += String(a, HEX) + " ";
+		} else {
+			message += "-- ";
+		}
+	}
+	message += "\n";
+
         return write_ok_message(srv, message.c_str());
     }
     case 4: // READ AS CONTROLLER
@@ -379,79 +378,55 @@ int I2CHandler::handle_controller_read(TwoWire *i2c, uint8_t *data, size_t size)
 }
 
 // CALLBACKS
-void I2CHandler::on_receive_callback_0(int numBytes) {
+
+void I2CHandler::on_receive_callback(int bus_number, int numBytes) {
     if (numBytes < 2)
     {
         return;
     }
 
-    uint8_t register_index = Wire.read();
+    TwoWire *cur = i2c_array[bus_number];
+    uint8_t register_index = cur->read();
     if (register_index >= REGISTER_COUNT)
     {
         return;
     }
-    data_register[0][register_index] = Wire.read();
+    data_register[bus_number][register_index] = cur->read();
+}
+
+void I2CHandler::on_receive_callback_0(int numBytes) {
+	return on_receive_callback(0, numBytes);
 }
 
 void I2CHandler::on_receive_callback_1(int numBytes) {
-    if (numBytes < 2)
-    {
-        return;
-    }
-
-    uint8_t register_index = Wire1.read();
-    if (register_index >= REGISTER_COUNT)
-    {
-        return;
-    }
-    data_register[1][register_index] = Wire1.read();
+	return on_receive_callback(1, numBytes);
 }
 
 void I2CHandler::on_receive_callback_2(int numBytes) {
-    if (numBytes < 2)
-    {
-        return;
-    }
+	return on_receive_callback(2, numBytes);
+}
 
-    uint8_t register_index = Wire2.read();
+void I2CHandler::on_request_callback(int bus_number) {
+    TwoWire *cur = i2c_array[bus_number];
+
+    uint8_t register_index = cur->read();
     if (register_index >= REGISTER_COUNT)
     {
         return;
     }
-    data_register[2][register_index] = Wire2.read();
+    cur->write(data_register[bus_number][register_index]);
 }
 
 void I2CHandler::on_request_callback_0() {
-    uint8_t register_index = Wire.read();
-    Serial.println(register_index);
-    if (register_index >= REGISTER_COUNT)
-    {
-        Serial.println("NOPE");
-        return;
-    }
-
-    Serial.println("Request received");
-
-    Wire.write(data_register[0][register_index]);
+	return on_request_callback(0);
 }
 
 void I2CHandler::on_request_callback_1() {
-    uint8_t register_index = Wire1.read();
-    if (register_index >= REGISTER_COUNT)
-    {
-        return;
-    }
-
-    Wire1.write(data_register[1][register_index]);
+	return on_request_callback(1);
 }
 
 void I2CHandler::on_request_callback_2() {
-    uint8_t register_index = Wire2.read();
-    if (register_index >= REGISTER_COUNT)
-    {
-        return;
-    }
-
-    Wire2.write(data_register[2][register_index]);
+	return on_request_callback(2);
 }
+
 //END OF CALLBACKS
