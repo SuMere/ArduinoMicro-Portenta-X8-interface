@@ -42,6 +42,19 @@ chAT::CommandStatus CanHandler::handle_write(chAT::Server &srv, chAT::ATParser &
     return write_ok_message(srv, "");
 }
 
+chAT::CommandStatus CanHandler::handle_test(chAT::Server &srv, chAT::ATParser &parser) {
+    if (parser.args.size() != 0) {
+        return write_error_message(srv, "Invalid number of arguments");
+    }
+
+    String message = "\n";
+    message += "AT+CAN? - Read CAN message from CAN0 bus\n";
+    message += "AT+CAN=<message> - Write CAN message in CAN0 bus\n";
+    message += "AT+CAN_CFG=<bitrate> - Configure CAN0 bus speed with <bitrate>\n";
+
+    return write_ok_message(srv, message.c_str());
+}
+
 chAT::CommandStatus CanHandler::handle_cfg_write(chAT::Server &srv, chAT::ATParser &parser) {
     if (parser.args.size() != 1) {
         return write_error_message(srv, "Invalid number of arguments");
@@ -53,7 +66,7 @@ chAT::CommandStatus CanHandler::handle_cfg_write(chAT::Server &srv, chAT::ATPars
     }
 
     is_configured = true;
-    return chAT::CommandStatus::OK;
+    return write_ok_message(srv, "");
 }
 
 int CanHandler::send_frame(const uint8_t *frame, const uint8_t size) {
@@ -61,7 +74,7 @@ int CanHandler::send_frame(const uint8_t *frame, const uint8_t size) {
 
     int ret = CAN.write(message);
     if(ret <= 0) {
-        return EIO;
+        return -EIO;
     }
 
     return 0;
@@ -77,7 +90,7 @@ int CanHandler::receive_frame(String* frame, size_t* size) {
     }
 
     if(CAN.available() == 0) {
-        return EIO;
+        return -EIO;
     }
 
     message = CAN.read();

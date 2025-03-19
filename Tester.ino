@@ -9,6 +9,7 @@ I2CHandler i2c_handler;
 PwmHandler pwm_handler;
 DacHandler dac_handler;
 UartHandler uart_handler;
+Helper helper;
 
 void setup() {
   SERIAL_AT.begin(115200);

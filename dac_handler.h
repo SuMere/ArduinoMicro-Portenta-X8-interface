@@ -5,6 +5,7 @@
 class DacHandler : public CmdHandler{
     private:
         virtual chAT::CommandStatus handle_write(chAT::Server&, chAT::ATParser&);
+        virtual chAT::CommandStatus handle_test(chAT::Server&, chAT::ATParser&);
 
         int set_output_voltage(float voltage);
         int from_voltage_to_dac_count(float voltage);

@@ -38,6 +38,8 @@ void CAtHandler::begin(HardwareSerial *s)
 			switch (parser.cmd_mode) {
 			    case chAT::CommandMode::Read:       return it->second->handle_read(srv, parser);
 			    case chAT::CommandMode::Write:      return it->second->handle_write(srv, parser);
+				case chAT::CommandMode::Test:       return it->second->handle_test(srv, parser);
+				case chAT::CommandMode::Run:        return it->second->handle_run(srv, parser);
 			}
 		} else if (command.find("_CFG") == command.length()-4) {
 			auto it = command_table.find(command.substr(0, command.length()-4));

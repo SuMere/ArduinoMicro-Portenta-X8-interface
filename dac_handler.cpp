@@ -19,6 +19,13 @@ chAT::CommandStatus DacHandler::handle_write(chAT::Server &srv, chAT::ATParser &
     return write_ok_message(srv, String(voltage).c_str());
 }
 
+chAT::CommandStatus DacHandler::handle_test(chAT::Server &srv, chAT::ATParser &parser)
+{
+    String message = "\n";
+    message += "AT+DAC=<voltage> - Set DAC output voltage in DAC0 pin\n";
+    return write_ok_message(srv, message.c_str());
+}
+
 int DacHandler::from_voltage_to_dac_count(float voltage) {
     int count = static_cast<int>(voltage * 255 / 3.3);
     return count;
@@ -26,9 +33,9 @@ int DacHandler::from_voltage_to_dac_count(float voltage) {
 
 int DacHandler::set_output_voltage(float voltage) {
     if (voltage < 0 || voltage > 3.3) {
-        return EINVAL;
+        return -EINVAL;
     }
-    
+
     int count = this->from_voltage_to_dac_count(voltage);
 
     pinMode(GIGA_DAC, OUTPUT);
