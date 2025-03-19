@@ -11,6 +11,8 @@ class CmdHandler {
     private:
         virtual chAT::CommandStatus handle_read(chAT::Server&, chAT::ATParser&) { return chAT::CommandStatus::ERROR; }
         virtual chAT::CommandStatus handle_write(chAT::Server&, chAT::ATParser&) { return chAT::CommandStatus::ERROR; }
+        virtual chAT::CommandStatus handle_test(chAT::Server&, chAT::ATParser&) { return chAT::CommandStatus::ERROR; }
+        virtual chAT::CommandStatus handle_run(chAT::Server&, chAT::ATParser&) { return chAT::CommandStatus::ERROR; }
         virtual chAT::CommandStatus handle_cfg_read(chAT::Server&, chAT::ATParser&) { return chAT::CommandStatus::ERROR; }
         virtual chAT::CommandStatus handle_cfg_write(chAT::Server&, chAT::ATParser&) { return chAT::CommandStatus::ERROR; }
     protected:

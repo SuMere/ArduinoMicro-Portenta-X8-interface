@@ -20,7 +20,7 @@ chAT::CommandStatus GpioHandler::handle_read(chAT::Server &srv, chAT::ATParser &
     if(get_gpio_status(interfaceGpio, &gpioStatus) != 0){
         return write_error_message(srv, "Error reading GPIO");
     }
-    
+
     return write_ok_message(srv, ("#"+String(interfaceGpio)+" Value:"+String(gpioStatus)).c_str());
 }
 
@@ -43,9 +43,18 @@ chAT::CommandStatus GpioHandler::handle_write(chAT::Server &srv, chAT::ATParser 
     return write_ok_message(srv, ("#"+String(interfaceGpio)+" Value:"+String(value)).c_str());
 }
 
+chAT::CommandStatus GpioHandler::handle_test(chAT::Server &srv, chAT::ATParser &parser)
+{
+    String message = "\n";
+    message += "AT+GPIO?<gpio number> - Read GPIO status\n";
+    message += "AT+GPIO=<gpio number>,<value> - Write GPIO status\n";
+
+    return write_ok_message(srv, message.c_str());
+}
+
 int GpioHandler::get_gpio_status(int gpio, int *value)
 {
-    pinMode(gpio, INPUT);
+    pinMode(gpio, INPUT_PULLUP);
     *value = digitalRead(gpio);
 
     return 0;

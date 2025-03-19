@@ -49,6 +49,21 @@ chAT::CommandStatus UartHandler::handle_write(chAT::Server &srv, chAT::ATParser 
     return write_ok_message(srv, "");
 }
 
+chAT::CommandStatus UartHandler::handle_test(chAT::Server &srv, chAT::ATParser &parser)
+{
+    String message = "\n";
+    message += "AT+UART?<uart bus number> - Read UART message\n";
+    message += "AT+UART=<uart bus number>,<message> - Write UART message\n";
+    message += "AT+UART_CFG=<uart bus number>,<baud rate>,<data bits>,<parity>,<stop bits> - Configure UART\n";
+    message += "            baud rate: 9600, 19200, 38400, 57600, 115200\n";
+    message += "            data bits: 5, 6, 7, 8\n";
+    message += "            parity: N, E, O\n";
+    message += "            stop bits: 1, 2\n";
+    message += "AT+UART_CFG?<uart bus number> - Read UART configuration\n";
+
+    return write_ok_message(srv, message.c_str());
+}
+
 chAT::CommandStatus UartHandler::handle_cfg_read(chAT::Server &srv, chAT::ATParser &parser)
 {
     if(parser.args.size() != 1) {

@@ -36,14 +36,23 @@ chAT::CommandStatus PwmHandler::handle_write(chAT::Server &srv, chAT::ATParser &
     if(set_pwm_out(pwmChannel, dutyCycle) != 0){
         return write_error_message(srv, "Error writing PWM");
     }
-    
+
     return write_ok_message(srv, ("#"+String(pwmChannel)+" DutyCycle %:"+String(dutyCycle)).c_str());
+}
+
+chAT::CommandStatus PwmHandler::handle_test(chAT::Server &srv, chAT::ATParser &parser)
+{
+    String message = "\n";
+    message += "AT+PWM?<adc channel> - Read PWM input as pulse count\n";
+    message += "AT+PWM=<pwm channel>,<duty cycle in percentage> - Set Pwm output\n";
+
+    return write_ok_message(srv, message.c_str());
 }
 
 int PwmHandler::read_pwm_in(int adcChannel, int *output) {
     float pulseLenght = 0;
     if(adcChannel < 0 || adcChannel > 7){
-        return EINVAL;
+        return -EINVAL;
     }
 
     int adc_channel = A0+adcChannel;
@@ -66,7 +75,7 @@ int PwmHandler::set_pwm_out(int pwmChannel, int dutyCycle_percentage) {
        dutyCycle_percentage < 0 ||
        dutyCycle_percentage > 100)
     {
-        return EINVAL;
+        return -EINVAL;
     }
 
     int dutyCycle = map(dutyCycle_percentage, 0, 100, 0, 255);

@@ -10,6 +10,7 @@ class CanHandler : public CmdHandler {
         bool is_configured = false;
         virtual chAT::CommandStatus handle_read(chAT::Server&, chAT::ATParser&);
         virtual chAT::CommandStatus handle_write(chAT::Server&, chAT::ATParser&);
+        virtual chAT::CommandStatus handle_test(chAT::Server&, chAT::ATParser&);
         virtual chAT::CommandStatus handle_cfg_write(chAT::Server&, chAT::ATParser&);
 
         static const uint32_t ID = 0x20;
