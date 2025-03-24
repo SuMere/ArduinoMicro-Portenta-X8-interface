@@ -2,7 +2,7 @@
 
 #include "at_handler.h"
 
-#define MAX_GPIO_NUMBER 94
+#define MAX_GPIO_NUMBER 102
 
 chAT::CommandStatus GpioHandler::handle_read(chAT::Server &srv, chAT::ATParser &parser)
 {

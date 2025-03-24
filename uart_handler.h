@@ -2,7 +2,6 @@
 
 #include <Arduino.h>
 #include "cmd_handler.h"
-#include "serial_fc.h"
 #include <pinDefinitions.h>
 #define UART_COUNT 4
 

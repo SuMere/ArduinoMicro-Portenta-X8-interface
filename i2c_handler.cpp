@@ -262,8 +262,6 @@ int I2CHandler::i2c_write(uint8_t bus_number, uint8_t address, uint8_t register_
 
     i2c_handler_data_t *curr = &i2c_data[bus_number];
 
-    i2c_handler_data_t *curr = &i2c_data[bus_number];
-
     if(curr->is_configured == false ||
        curr->is_controller == false)
     {
